@@ -20,7 +20,7 @@ func TestGet(t *testing.T) {
 	for _, c := range goodCases {
 		_, err := get(c)
 		if err != nil {
-			t.Error("get() should'nt have failed")
+			t.Error("get() shouldn't have failed")
 		}
 	}
 }
@@ -40,7 +40,7 @@ func TestPost(t *testing.T) {
 	for _, c := range goodCases {
 		_, err := post(c, "q=test")
 		if err != nil {
-			t.Error("post() should'nt have failed")
+			t.Error("post() shouldn't have failed")
 		}
 	}
 }
