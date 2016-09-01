@@ -1,6 +1,7 @@
 package swclient
 
 import (
+	"crypto/md5"
 	"net/http"
 	"testing"
 )
@@ -66,8 +67,8 @@ func TestDigestParseParameters(t *testing.T) {
 	}
 }
 
-func TestHash(t *testing.T) {
-	h, err := hash("test")
+func TestHashString(t *testing.T) {
+	h, err := hashString("test", md5.New())
 	if err != nil {
 		t.Error(err)
 	}
@@ -78,7 +79,7 @@ func TestHash(t *testing.T) {
 }
 
 func TestHashNow(t *testing.T) {
-	_, err := hashNow()
+	_, err := hashNow(md5.New())
 	if err != nil {
 		t.Error(err)
 	}

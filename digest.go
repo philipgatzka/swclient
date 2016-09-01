@@ -1,8 +1,8 @@
 package swclient
 
 import (
-	"crypto/md5"
 	"fmt"
+	"hash"
 	"net/http"
 	"strings"
 	"time"
@@ -58,8 +58,7 @@ func (h *header) parseParameters(response http.Response) *header {
 }
 
 // hash returns the md5 hash of the supplied string
-func hash(str string) (string, error) {
-	hasher := md5.New()
+func hashString(str string, hasher hash.Hash) (string, error) {
 	_, err := hasher.Write([]byte(str))
 	if err != nil {
 		return "", err
@@ -68,8 +67,8 @@ func hash(str string) (string, error) {
 }
 
 // hashNow returns the hashed system time at the time of execution
-func hashNow() (string, error) {
-	return hash(time.Now().String())
+func hashNow(hasher hash.Hash) (string, error) {
+	return hashString(time.Now().String(), hasher)
 }
 
 // isComplete checks if all fields in header are != an empty string
