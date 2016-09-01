@@ -1,2 +1,2 @@
 # swclient
-A simple Client for the Shopware-API
+Just me learning go at the moment...
