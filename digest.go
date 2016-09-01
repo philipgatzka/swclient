@@ -1,10 +1,14 @@
 package swclient
 
 import (
+	"crypto/md5"
+	"fmt"
 	"net/http"
 	"strings"
+	"time"
 )
 
+// header holds all information required for a digest-request
 type header struct {
 	realm     string
 	qop       string
@@ -27,7 +31,7 @@ func (h *header) parseParameters(response http.Response) *header {
 
 	// get the protocol info from the responses auth header
 	responseAuthHeader := response.Header.Get("Www-Authenticate")
-	// delete the "Digest" keyword from the beginning of the response string
+	// trim "Digest " from the beginning of the response string
 	cleanAuthHeader := strings.Trim(responseAuthHeader, "Digest ")
 	// split the response string into a slice
 	keyValuePairs := strings.Split(cleanAuthHeader, ", ")
@@ -47,12 +51,28 @@ func (h *header) parseParameters(response http.Response) *header {
 	h.realm = auth["realm"]
 	h.nOnce = auth["nonce"]
 	h.opaque = auth["opaque"]
-	h.algorithm = auth["algorithm"]
 	h.qop = auth["qop"]
+	h.algorithm = auth["algorithm"]
 
 	return h
 }
 
+// hash returns the md5 hash of the supplied string
+func hash(str string) (string, error) {
+	hasher := md5.New()
+	_, err := hasher.Write([]byte(str))
+	if err != nil {
+		return "", err
+	}
+	return fmt.Sprintf("%x", hasher.Sum(nil)), nil // %x renders the string in base 16
+}
+
+// hashNow returns the hashed system time at the time of execution
+func hashNow() (string, error) {
+	return hash(time.Now().String())
+}
+
+// isComplete checks if all fields in header are != an empty string
 func (h *header) isComplete() bool {
 	if h.realm == "" {
 		return false

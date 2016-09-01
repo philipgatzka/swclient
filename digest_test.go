@@ -1,7 +1,6 @@
 package swclient
 
 import (
-	"fmt"
 	"net/http"
 	"testing"
 )
@@ -9,7 +8,7 @@ import (
 func TestDigestIsComplete(t *testing.T) {
 	h := header{}
 	if h.isComplete() {
-		t.Error("Expected " + fmt.Sprint(h.isComplete()) + " to be false")
+		t.Error("Expected h.isComplete() to be false")
 	}
 
 	h.realm = "somestring"
@@ -27,20 +26,20 @@ func TestDigestIsComplete(t *testing.T) {
 	h.qop = "somestring"
 
 	if !h.isComplete() {
-		t.Error("Expected " + fmt.Sprint(!h.isComplete()) + " to be false")
+		t.Error("Expected h.isComplete() to be true")
 	}
 
 	h.key = ""
 
 	if h.isComplete() {
-		t.Error("Expected " + fmt.Sprint(h.isComplete()) + " to be false")
+		t.Error("Expected h.isComplete() to be false")
 	}
 }
 
 func TestDigestParseParameters(t *testing.T) {
 
 	testHeader := map[string][]string{}
-	testHeader["Www-Authenticate"] = []string{`Digest username="user", realm="realm", nonce="nonce", uri="u/r/i", response="response", opaque="opaque", qop=auth, nc=00000001, cnonce="cnonce"`}
+	testHeader["Www-Authenticate"] = []string{`Digest username="user", realm="realm", nonce="nonce", uri="u/r/i", response="response", opaque="opaque", qop=auth, nc=00000001, cnonce="cnonce", algorithm="md5"`}
 	testResponse := http.Response{Header: testHeader}
 
 	cases := []http.Response{testResponse}
@@ -62,7 +61,25 @@ func TestDigestParseParameters(t *testing.T) {
 			t.Error("opaque is empty")
 		}
 		if h.algorithm == "" {
-			t.Log("algorithm is empty, but will implicitly be expected to be md5")
+			t.Error("algorithm is empty")
 		}
+	}
+}
+
+func TestHash(t *testing.T) {
+	h, err := hash("test")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if h != "098f6bcd4621d373cade4e832627b4f6" {
+		t.Error("hash() calculated a wrong hash")
+	}
+}
+
+func TestHashNow(t *testing.T) {
+	_, err := hashNow()
+	if err != nil {
+		t.Error(err)
 	}
 }
