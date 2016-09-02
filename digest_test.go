@@ -1,41 +1,9 @@
 package swclient
 
 import (
-	"crypto/md5"
 	"net/http"
 	"testing"
 )
-
-func TestDigestIsComplete(t *testing.T) {
-	h := header{}
-	if h.isComplete() {
-		t.Error("Expected h.isComplete() to be false")
-	}
-
-	h.realm = "somestring"
-	h.algorithm = "somestring"
-	h.aOne = "somestring"
-	h.aTwo = "somestring"
-	h.cNonce = "somestring"
-	h.key = "somestring"
-	h.method = "somestring"
-	h.name = "somestring"
-	h.nC = 0x1
-	h.nOnce = "somestring"
-	h.opaque = "somestring"
-	h.path = "somestring"
-	h.qop = "somestring"
-
-	if !h.isComplete() {
-		t.Error("Expected h.isComplete() to be true")
-	}
-
-	h.key = ""
-
-	if h.isComplete() {
-		t.Error("Expected h.isComplete() to be false")
-	}
-}
 
 func TestDigestParseParameters(t *testing.T) {
 
@@ -67,20 +35,33 @@ func TestDigestParseParameters(t *testing.T) {
 	}
 }
 
-func TestHashString(t *testing.T) {
-	h, err := hashString("test", md5.New())
-	if err != nil {
-		t.Error(err)
+func TestDigestIsComplete(t *testing.T) {
+	h := header{}
+	if h.isComplete() {
+		t.Error("Expected h.isComplete() to be false")
 	}
 
-	if h != "098f6bcd4621d373cade4e832627b4f6" {
-		t.Error("hash() calculated a wrong hash")
-	}
-}
+	h.realm = "somestring"
+	h.algorithm = "somestring"
+	h.aOne = "somestring"
+	h.aTwo = "somestring"
+	h.cNonce = "somestring"
+	h.key = "somestring"
+	h.method = "somestring"
+	h.name = "somestring"
+	h.nC = 0x1
+	h.nOnce = "somestring"
+	h.opaque = "somestring"
+	h.path = "somestring"
+	h.qop = "somestring"
 
-func TestHashNow(t *testing.T) {
-	_, err := hashNow(md5.New())
-	if err != nil {
-		t.Error(err)
+	if !h.isComplete() {
+		t.Error("Expected h.isComplete() to be true")
+	}
+
+	h.key = ""
+
+	if h.isComplete() {
+		t.Error("Expected h.isComplete() to be false")
 	}
 }
