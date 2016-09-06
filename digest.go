@@ -1,12 +1,12 @@
 package swclient
 
 import (
+	"errors"
 	"fmt"
 	"hash"
 	"net/http"
 	"strings"
 	"time"
-	"errors"
 )
 
 // header holds all information required for a digest-request
@@ -26,9 +26,27 @@ type header struct {
 	key       string
 }
 
+// fetchDigestInfo executes a get request to the server in order to receive the digest authentication parameters
+func (h *header) fetchDigestInfo(uri string, getter httpGetter) (*header, error) {
+	response, err := getter.Get(uri)
+	if err != nil {
+		return nil, err
+	}
+	// parse parameters from response
+	auth := parseParameters(*response)
+	// populate the header
+	h.realm = auth["realm"]
+	h.nOnce = auth["nonce"]
+	h.opaque = auth["opaque"]
+	h.algorithm = auth["algorithm"]
+	h.qop = auth["qop"]
+
+	return h, nil
+}
+
 // parseParameters saves the values for realm, nOnce, opaque, algorithm and qop
 // from a (digest) response header into the local header struct
-func (h *header) parseParameters(response http.Response) *header {
+func parseParameters(response http.Response) map[string]string {
 
 	// get the protocol info from the responses auth header
 	responseAuthHeader := response.Header.Get("Www-Authenticate")
@@ -48,14 +66,7 @@ func (h *header) parseParameters(response http.Response) *header {
 		auth[key] = value
 	}
 
-	// assign all values
-	h.realm = auth["realm"]
-	h.nOnce = auth["nonce"]
-	h.opaque = auth["opaque"]
-	h.qop = auth["qop"]
-	h.algorithm = auth["algorithm"]
-
-	return h
+	return auth
 }
 
 // hash returns the md5 hash of the supplied string

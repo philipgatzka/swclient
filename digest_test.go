@@ -1,36 +1,55 @@
 package swclient
 
 import (
+	"crypto/md5"
 	"net/http"
 	"testing"
-	"crypto/md5"
 )
+
+type stubGetter struct{}
+
+var testAuthHeader string = `Digest username="user", realm="realm", nonce="nonce", uri="http://testing.org", response="response", opaque="opaque", qop=auth, nc=00000001, cnonce="cnonce", algorithm="md5"`
+
+func (s stubGetter) Get(uri string) (*http.Response, error) {
+	testHeader := map[string][]string{}
+	testHeader["Www-Authenticate"] = []string{testAuthHeader}
+	return &http.Response{Header: testHeader}, nil
+}
+
+func TestFetchServerInfo(t *testing.T) {
+	h := header{}
+	g := stubGetter{}
+
+	_, err := h.fetchDigestInfo("http://testing.org", g)
+	if err != nil {
+		t.Error(err)
+	}
+}
 
 func TestDigestParseParameters(t *testing.T) {
 
 	testHeader := map[string][]string{}
-	testHeader["Www-Authenticate"] = []string{`Digest username="user", realm="realm", nonce="nonce", uri="u/r/i", response="response", opaque="opaque", qop=auth, nc=00000001, cnonce="cnonce", algorithm="md5"`}
+	testHeader["Www-Authenticate"] = []string{testAuthHeader}
 	testResponse := http.Response{Header: testHeader}
 
 	cases := []http.Response{testResponse}
 
 	for _, c := range cases {
-		h := header{}
-		h.parseParameters(c)
+		tuples := parseParameters(c)
 
-		if h.realm == "" {
+		if tuples["realm"] == "" {
 			t.Error("realm is empty")
 		}
-		if h.qop == "" {
+		if tuples["qop"] == "" {
 			t.Error("qop is empty")
 		}
-		if h.nOnce == "" {
+		if tuples["nonce"] == "" {
 			t.Error("nOnce is empty")
 		}
-		if h.opaque == "" {
+		if tuples["opaque"] == "" {
 			t.Error("opaque is empty")
 		}
-		if h.algorithm == "" {
+		if tuples["algorithm"] == "" {
 			t.Error("algorithm is empty")
 		}
 	}
