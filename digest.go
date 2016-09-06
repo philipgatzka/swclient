@@ -72,7 +72,7 @@ func hashNow(hasher hash.Hash) (string, error) {
 }
 
 // isComplete checks if all fields in header are != an empty string
-func (h *header) isComplete() bool {
+func (h header) isComplete() bool {
 	if h.realm == "" {
 		return false
 	}
