@@ -6,6 +6,7 @@ import (
 	"net/http"
 	"strings"
 	"time"
+	"errors"
 )
 
 // header holds all information required for a digest-request
@@ -113,4 +114,41 @@ func (h header) isComplete() bool {
 		return false
 	}
 	return true
+}
+
+// checksums calculates the hashes of aOne and aTwo
+func (h *header) checksums(hasher hash.Hash) error {
+	// check if name, realm and key have a value
+	if h.name == "" || h.realm == "" || h.key == "" {
+		return errors.New("name, realm or key missing from header!")
+	}
+	// join
+	aOne := []string{h.name, h.realm, h.key}
+	// cheack if method and path have a value
+	if h.method == "" || h.path == "" {
+		return errors.New("method or path missing from header!")
+	}
+	// join
+	aTwo := []string{h.method, h.path}
+	// calculate hash
+	hasher.Reset()
+	aOneHash, err := hashString(joinWithColon(aOne), hasher)
+	if err != nil {
+		return err
+	}
+	// calculate hash
+	hasher.Reset()
+	aTwoHash, err := hashString(joinWithColon(aTwo), hasher)
+	if err != nil {
+		return err
+	}
+	// assign, return
+	h.aOne = aOneHash
+	h.aTwo = aTwoHash
+	return nil
+}
+
+// joinWithColon joins a slice of strings into one string separated with colons
+func joinWithColon(str []string) string {
+	return strings.Join(str, ":")
 }
