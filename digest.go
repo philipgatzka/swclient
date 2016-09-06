@@ -27,7 +27,7 @@ type header struct {
 }
 
 // parseParameters saves the values for realm, nOnce, opaque, algorithm and qop
-// from a (digest) response header into the local header struct
+// from a response header into the local header struct
 func (h *header) parseParameters(response http.Response) map[string]string {
 
 	// get the protocol info from the responses auth header
@@ -72,6 +72,43 @@ func hashNow(hasher hash.Hash) (string, error) {
 	return hashString(time.Now().String(), hasher)
 }
 
+// checksums calculates the hashes of aOne and aTwo
+func (h *header) checksums(hasher hash.Hash) error {
+	// check if name, realm and key have a value
+	if h.name == "" || h.realm == "" || h.key == "" {
+		return errors.New("name, realm or key missing from header!")
+	}
+	// join
+	aOne := []string{h.name, h.realm, h.key}
+	// check if method and path have a value
+	if h.method == "" || h.path == "" {
+		return errors.New("method or path missing from header!")
+	}
+	// join
+	aTwo := []string{h.method, h.path}
+	// calculate hash
+	hasher.Reset()
+	aOneHash, err := hashString(joinWithColon(aOne), hasher)
+	if err != nil {
+		return err
+	}
+	// calculate hash
+	hasher.Reset()
+	aTwoHash, err := hashString(joinWithColon(aTwo), hasher)
+	if err != nil {
+		return err
+	}
+	// assign, return
+	h.aOne = aOneHash
+	h.aTwo = aTwoHash
+	return nil
+}
+
+// joinWithColon joins a slice of strings into one string separated with colons
+func joinWithColon(str []string) string {
+	return strings.Join(str, ":")
+}
+
 // isComplete checks if all fields in header are != an empty string
 func (h header) isComplete() bool {
 	if h.realm == "" {
@@ -114,41 +151,4 @@ func (h header) isComplete() bool {
 		return false
 	}
 	return true
-}
-
-// checksums calculates the hashes of aOne and aTwo
-func (h *header) checksums(hasher hash.Hash) error {
-	// check if name, realm and key have a value
-	if h.name == "" || h.realm == "" || h.key == "" {
-		return errors.New("name, realm or key missing from header!")
-	}
-	// join
-	aOne := []string{h.name, h.realm, h.key}
-	// cheack if method and path have a value
-	if h.method == "" || h.path == "" {
-		return errors.New("method or path missing from header!")
-	}
-	// join
-	aTwo := []string{h.method, h.path}
-	// calculate hash
-	hasher.Reset()
-	aOneHash, err := hashString(joinWithColon(aOne), hasher)
-	if err != nil {
-		return err
-	}
-	// calculate hash
-	hasher.Reset()
-	aTwoHash, err := hashString(joinWithColon(aTwo), hasher)
-	if err != nil {
-		return err
-	}
-	// assign, return
-	h.aOne = aOneHash
-	h.aTwo = aTwoHash
-	return nil
-}
-
-// joinWithColon joins a slice of strings into one string separated with colons
-func joinWithColon(str []string) string {
-	return strings.Join(str, ":")
 }
