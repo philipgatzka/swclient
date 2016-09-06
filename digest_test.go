@@ -6,27 +6,8 @@ import (
 	"testing"
 )
 
-type stubGetter struct{}
-
-var testAuthHeader string = `Digest username="user", realm="realm", nonce="nonce", uri="http://testing.org", response="response", opaque="opaque", qop=auth, nc=00000001, cnonce="cnonce", algorithm="md5"`
-
-func (s stubGetter) Get(uri string) (*http.Response, error) {
-	testHeader := map[string][]string{}
-	testHeader["Www-Authenticate"] = []string{testAuthHeader}
-	return &http.Response{Header: testHeader}, nil
-}
-
-func TestFetchServerInfo(t *testing.T) {
-	h := header{}
-	g := stubGetter{}
-
-	_, err := h.fetchDigestInfo("http://testing.org", g)
-	if err != nil {
-		t.Error(err)
-	}
-}
-
 func TestDigestParseParameters(t *testing.T) {
+	testAuthHeader := `Digest username="user", realm="realm", nonce="nonce", uri="http://testing.org", response="response", opaque="opaque", qop=auth, nc=00000001, cnonce="cnonce", algorithm="md5"`
 
 	testHeader := map[string][]string{}
 	testHeader["Www-Authenticate"] = []string{testAuthHeader}
@@ -34,8 +15,10 @@ func TestDigestParseParameters(t *testing.T) {
 
 	cases := []http.Response{testResponse}
 
+	h := header{}
+
 	for _, c := range cases {
-		tuples := parseParameters(c)
+		tuples := h.parseParameters(c)
 
 		if tuples["realm"] == "" {
 			t.Error("realm is empty")
