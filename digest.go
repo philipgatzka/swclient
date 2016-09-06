@@ -28,7 +28,7 @@ type header struct {
 
 // parseParameters saves the values for realm, nOnce, opaque, algorithm and qop
 // from a response header into the local header struct
-func (h *header) parseParameters(response http.Response) map[string]string {
+func (h *header) parseParameters(response *http.Response) map[string]string {
 
 	// get the protocol info from the responses auth header
 	responseAuthHeader := response.Header.Get("Www-Authenticate")

@@ -11,9 +11,9 @@ func TestDigestParseParameters(t *testing.T) {
 
 	testHeader := map[string][]string{}
 	testHeader["Www-Authenticate"] = []string{testAuthHeader}
-	testResponse := http.Response{Header: testHeader}
+	testResponse := &http.Response{Header: testHeader}
 
-	cases := []http.Response{testResponse}
+	cases := []*http.Response{testResponse}
 
 	h := header{}
 
