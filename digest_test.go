@@ -15,10 +15,8 @@ func TestDigestParseParameters(t *testing.T) {
 
 	cases := []*http.Response{testResponse}
 
-	h := header{}
-
 	for _, c := range cases {
-		tuples := h.parseParameters(c)
+		tuples := parseParameters(c)
 
 		if tuples["realm"] == "" {
 			t.Error("realm is empty")
@@ -38,45 +36,9 @@ func TestDigestParseParameters(t *testing.T) {
 	}
 }
 
-func TestDigestChecksums(t *testing.T) {
-	h := header{}
-
-	err := h.checksums(md5.New())
-	if err == nil {
-		t.Error("didn't fail on empty header")
-	}
-
-	h.name = "hello"
-	h.realm = "this is"
-	h.key = "test"
-
-	err = h.checksums(md5.New())
-	if err == nil {
-		t.Error("didn't fail on empty method/path")
-	}
-
-	h.method = "test"
-	h.path = "again"
-
-	err = h.checksums(md5.New())
-	if err != nil {
-		t.Error(err)
-	}
-
-	expectedAOne := "5e6c31ea339e04180ef868d58c9e978b"
-	expectedATwo := "b40a1f379821a5dfa8d4ed703bb10bcd"
-
-	if h.aOne != expectedAOne {
-		t.Error("aOne was incorrect!")
-	}
-	if h.aTwo != expectedATwo {
-		t.Error("aTwo was incorrect!")
-	}
-}
-
 func TestDigestJoinWithColon(t *testing.T) {
 	expected := "hello:this:is:test"
-	got := joinWithColon([]string{"hello", "this", "is", "test"})
+	got := joinWithColon("hello", "this", "is", "test")
 
 	if got != expected {
 		t.Error("expected", expected, "got", got)
@@ -84,32 +46,49 @@ func TestDigestJoinWithColon(t *testing.T) {
 }
 
 func TestDigestIsComplete(t *testing.T) {
-	h := header{}
-	if h.isComplete() {
+	d := digest{}
+	if d.isComplete() {
 		t.Error("Expected h.isComplete() to be false")
 	}
 
-	h.realm = "somestring"
-	h.algorithm = "somestring"
-	h.aOne = "somestring"
-	h.aTwo = "somestring"
-	h.cNonce = "somestring"
-	h.key = "somestring"
-	h.method = "somestring"
-	h.name = "somestring"
-	h.nC = 0x1
-	h.nOnce = "somestring"
-	h.opaque = "somestring"
-	h.path = "somestring"
-	h.qop = "somestring"
+	d.realm = "somestring"
+	d.algorithm = "somestring"
+	d.aOne = "somestring"
+	d.aTwo = "somestring"
+	d.cNonce = "somestring"
+	d.key = "somestring"
+	d.method = "somestring"
+	d.name = "somestring"
+	d.nC = 0x1
+	d.nOnce = "somestring"
+	d.opaque = "somestring"
+	d.path = "somestring"
+	d.qop = "somestring"
 
-	if !h.isComplete() {
+	if !d.isComplete() {
 		t.Error("Expected h.isComplete() to be true")
 	}
 
-	h.key = ""
+	d.key = ""
 
-	if h.isComplete() {
+	if d.isComplete() {
 		t.Error("Expected h.isComplete() to be false")
 	}
+}
+
+func TestDigestHashWithColon(t *testing.T) {
+	expected := "c1832f88c38ea538adc290536b3f7fcf"
+
+	got, err := hashWithColon(md5.New(), "hello", "this", "is", "test")
+	if err != nil {
+		t.Error(err)
+	}
+
+	if got != expected {
+		t.Error("got", got, "expected", expected)
+	}
+}
+
+func TestDigestCalculateResponse(t *testing.T) {
+	// TODO: finish
 }

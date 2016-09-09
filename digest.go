@@ -1,7 +1,6 @@
 package swclient
 
 import (
-	"errors"
 	"fmt"
 	"hash"
 	"net/http"
@@ -9,8 +8,8 @@ import (
 	"time"
 )
 
-// header holds all information required for a digest-request
-type header struct {
+// digest holds all information required for a digest-request
+type digest struct {
 	realm     string
 	qop       string
 	method    string
@@ -26,9 +25,65 @@ type header struct {
 	key       string
 }
 
-// parseParameters saves the values for realm, nOnce, opaque, algorithm and qop
-// from a response header into the local header struct
-func (h *header) parseParameters(response *http.Response) map[string]string {
+// calculateResponse calculates the response string the server requires
+func (d *digest) calculateResponse(method string, uri string, username string, key string, hasher hash.Hash) (string, error) {
+	// increment request count
+	d.nC += 0x1
+
+	// calculate new cNonce
+	cNonce, err := hashNow(hasher)
+	if err != nil {
+		return "", err
+	}
+	d.cNonce = cNonce
+
+	// set method
+	d.method = method
+
+	// set uri
+	d.path = uri
+
+	// set credentials
+	d.name = username
+	d.key = key
+
+	// calculate aOne
+	aOne, err := hashWithColon(hasher, d.name, d.realm, d.key)
+	if err != nil {
+		return "", err
+	}
+	// set aOne
+	d.aOne = aOne
+
+	// calculate aOne
+	aTwo, err := hashWithColon(hasher, d.method, d.path)
+	if err != nil {
+		return "", err
+	}
+	// set aTwo
+	d.aTwo = aTwo
+
+	// calculate response
+	response, err := hashWithColon(hasher, d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
+	if err != nil {
+		return "", err
+	}
+
+	return response, nil
+
+}
+
+// hashWithColon takes a slice of string, joins its parts into a single string with colons and hashes that
+func hashWithColon(hasher hash.Hash, parts ...string) (string, error) {
+	hashed, err := hashString(joinWithColon(parts...), hasher)
+	if err != nil {
+		return "", err
+	}
+	return hashed, nil
+}
+
+// parseParameters gets the values for realm, nOnce, opaque, algorithm and qop from a response header
+func parseParameters(response *http.Response) map[string]string {
 
 	// get the protocol info from the responses auth header
 	responseAuthHeader := response.Header.Get("Www-Authenticate")
@@ -48,18 +103,14 @@ func (h *header) parseParameters(response *http.Response) map[string]string {
 		auth[key] = value
 	}
 
-	// populate the header
-	h.realm = auth["realm"]
-	h.nOnce = auth["nonce"]
-	h.opaque = auth["opaque"]
-	h.algorithm = auth["algorithm"]
-	h.qop = auth["qop"]
-
 	return auth
 }
 
 // hash returns the md5 hash of the supplied string
 func hashString(str string, hasher hash.Hash) (string, error) {
+	// reset hasher because it could have been used before
+	hasher.Reset()
+
 	_, err := hasher.Write([]byte(str))
 	if err != nil {
 		return "", err
@@ -72,83 +123,34 @@ func hashNow(hasher hash.Hash) (string, error) {
 	return hashString(time.Now().String(), hasher)
 }
 
-// checksums calculates the hashes of aOne and aTwo
-func (h *header) checksums(hasher hash.Hash) error {
-	// check if name, realm and key have a value
-	if h.name == "" || h.realm == "" || h.key == "" {
-		return errors.New("name, realm or key missing from header!")
-	}
-	// join
-	aOne := []string{h.name, h.realm, h.key}
-	// check if method and path have a value
-	if h.method == "" || h.path == "" {
-		return errors.New("method or path missing from header!")
-	}
-	// join
-	aTwo := []string{h.method, h.path}
-	// calculate hash
-	hasher.Reset()
-	aOneHash, err := hashString(joinWithColon(aOne), hasher)
-	if err != nil {
-		return err
-	}
-	// calculate hash
-	hasher.Reset()
-	aTwoHash, err := hashString(joinWithColon(aTwo), hasher)
-	if err != nil {
-		return err
-	}
-	// assign, return
-	h.aOne = aOneHash
-	h.aTwo = aTwoHash
-	return nil
-}
-
 // joinWithColon joins a slice of strings into one string separated with colons
-func joinWithColon(str []string) string {
+func joinWithColon(str ...string) string {
 	return strings.Join(str, ":")
 }
 
 // isComplete checks if all fields in header are != an empty string
-func (h header) isComplete() bool {
-	if h.realm == "" {
-		return false
+func (d digest) isComplete() bool {
+	return !(equalsEmptyString(
+		d.realm,
+		d.qop,
+		d.method,
+		d.nOnce,
+		d.opaque,
+		d.algorithm,
+		d.aOne,
+		d.aTwo,
+		d.cNonce,
+		d.path,
+		d.name,
+		d.key) || d.nC == 0x0)
+}
+
+// equalsEmptyString returns true, if any of the provided strings is an empty string
+func equalsEmptyString(strings ...string) bool {
+	for _, s := range strings {
+		if s == "" {
+			return true
+		}
 	}
-	if h.qop == "" {
-		return false
-	}
-	if h.method == "" {
-		return false
-	}
-	if h.nOnce == "" {
-		return false
-	}
-	if h.opaque == "" {
-		return false
-	}
-	if h.algorithm == "" {
-		return false
-	}
-	if h.aOne == "" {
-		return false
-	}
-	if h.aTwo == "" {
-		return false
-	}
-	if h.cNonce == "" {
-		return false
-	}
-	if h.path == "" {
-		return false
-	}
-	if h.nC == 0x0 {
-		return false
-	}
-	if h.name == "" {
-		return false
-	}
-	if h.key == "" {
-		return false
-	}
-	return true
+	return false
 }
