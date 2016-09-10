@@ -45,33 +45,24 @@ func TestDigestJoinWithColon(t *testing.T) {
 	}
 }
 
-func TestDigestIsComplete(t *testing.T) {
+func TestDigestParsedParameters(t *testing.T) {
 	d := digest{}
-	if d.isComplete() {
+	if d.parsedParameters() {
 		t.Error("Expected h.isComplete() to be false")
 	}
 
 	d.realm = "somestring"
-	d.algorithm = "somestring"
-	d.aOne = "somestring"
-	d.aTwo = "somestring"
-	d.cNonce = "somestring"
-	d.key = "somestring"
-	d.method = "somestring"
-	d.name = "somestring"
-	d.nC = 0x1
 	d.nOnce = "somestring"
 	d.opaque = "somestring"
-	d.path = "somestring"
 	d.qop = "somestring"
 
-	if !d.isComplete() {
+	if !d.parsedParameters() {
 		t.Error("Expected h.isComplete() to be true")
 	}
 
-	d.key = ""
+	d.realm = ""
 
-	if d.isComplete() {
+	if d.parsedParameters() {
 		t.Error("Expected h.isComplete() to be false")
 	}
 }
@@ -90,5 +81,20 @@ func TestDigestHashWithColon(t *testing.T) {
 }
 
 func TestDigestCalculateResponse(t *testing.T) {
-	// TODO: finish
+	d := digest{
+		nC:    0x0,
+		realm: "/is/test",
+		qop:   "",
+	}
+	// expected := ""
+
+	_, err := d.calculateResponse("GET", "http://hello.this/is/test", "user", "key", md5.New())
+	if err != nil {
+		t.Error(err)
+	}
+
+	// FIXME: need to test cNonce generation somehow
+	// if got != expected {
+	//	t.Error("got", got, "expected", expected)
+	//}
 }

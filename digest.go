@@ -3,6 +3,7 @@ package swclient
 import (
 	"fmt"
 	"hash"
+	"io"
 	"net/http"
 	"strings"
 	"time"
@@ -23,6 +24,35 @@ type digest struct {
 	nC        int16
 	name      string
 	key       string
+}
+
+// generateRequest uses the provided information to generate a new http.Request which has all the necessary information
+// for digest-authentication
+func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, hasher hash.Hash) (*http.Request, error) {
+	// generate standard request
+	request, err := http.NewRequest(method, uri, body)
+	if err != nil {
+		return nil, err
+	}
+	// calculate response to server challenge
+	response, err := d.calculateResponse(method, uri, username, key, hasher)
+	if err != nil {
+		return nil, err
+	}
+	// construct the digest header string
+	authHeader := fmt.Sprintf(
+		`Digest username="%s", realm="%s", nonce="%s", uri="%s", cnonce="%s", nc=%08x, qop=%s, response="%s"`,
+		d.name, d.realm, d.nOnce, d.path, d.cNonce, d.nC, d.qop, response)
+	// if an opaque was provided, add it
+	if d.opaque != "" {
+		authHeader = fmt.Sprintf(`%s, opaque="%s"`, authHeader, d.opaque)
+	}
+	// set the authorization, host and content-type headers
+	request.Header.Set("Authorization", authHeader)
+	request.Header.Set("Host", request.Host)
+	request.Header.Set("Content-Type", "application/json; charset=utf-8")
+	// return authenticated request
+	return request, nil
 }
 
 // calculateResponse calculates the response string the server requires
@@ -84,7 +114,6 @@ func hashWithColon(hasher hash.Hash, parts ...string) (string, error) {
 
 // parseParameters gets the values for realm, nOnce, opaque, algorithm and qop from a response header
 func parseParameters(response *http.Response) map[string]string {
-
 	// get the protocol info from the responses auth header
 	responseAuthHeader := response.Header.Get("Www-Authenticate")
 	// trim "Digest " from the beginning of the response string
@@ -102,7 +131,6 @@ func parseParameters(response *http.Response) map[string]string {
 		value := strings.Replace(tuple[1], "\"", "", -1) // this just strips tuple[1] from quotation marks
 		auth[key] = value
 	}
-
 	return auth
 }
 
@@ -128,21 +156,9 @@ func joinWithColon(str ...string) string {
 	return strings.Join(str, ":")
 }
 
-// isComplete checks if all fields in header are != an empty string
-func (d digest) isComplete() bool {
-	return !(equalsEmptyString(
-		d.realm,
-		d.qop,
-		d.method,
-		d.nOnce,
-		d.opaque,
-		d.algorithm,
-		d.aOne,
-		d.aTwo,
-		d.cNonce,
-		d.path,
-		d.name,
-		d.key) || d.nC == 0x0)
+// parsedParameters checks if all fields required have been provided by the server; realm, nOnce, opaque and qop have to be set
+func (d digest) parsedParameters() bool {
+	return !equalsEmptyString(d.realm, d.nOnce, d.opaque, d.qop)
 }
 
 // equalsEmptyString returns true, if any of the provided strings is an empty string
