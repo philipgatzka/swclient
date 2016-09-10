@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// digest holds all information required for a digest-request
+// Digest holds all information required for a digest-request
 type digest struct {
 	realm     string
 	qop       string
@@ -28,7 +28,16 @@ type digest struct {
 
 // generateRequest uses the provided information to generate a new http.Request which has all the necessary information
 // for digest-authentication
-func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, hasher hash.Hash) (*http.Request, error) {
+// TODO: test this
+func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, hasher hash.Hash) (*http.Request, error) {
+	if !d.parsedParameters() {
+		auth := parseParameters(serverinfo)
+		d.realm = auth["realm"]
+		d.nOnce = auth["nonce"]
+		d.opaque = auth["opaque"]
+		d.algorithm = auth["algorithm"]
+		d.qop = auth["qop"]
+	}
 	// generate standard request
 	request, err := http.NewRequest(method, uri, body)
 	if err != nil {
@@ -103,15 +112,6 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 
 }
 
-// hashWithColon takes a slice of string, joins its parts into a single string with colons and hashes that
-func hashWithColon(hasher hash.Hash, parts ...string) (string, error) {
-	hashed, err := hashString(joinWithColon(parts...), hasher)
-	if err != nil {
-		return "", err
-	}
-	return hashed, nil
-}
-
 // parseParameters gets the values for realm, nOnce, opaque, algorithm and qop from a response header
 func parseParameters(response *http.Response) map[string]string {
 	// get the protocol info from the responses auth header
@@ -132,6 +132,15 @@ func parseParameters(response *http.Response) map[string]string {
 		auth[key] = value
 	}
 	return auth
+}
+
+// hashWithColon takes a slice of string, joins its parts into a single string with colons and hashes that
+func hashWithColon(hasher hash.Hash, parts ...string) (string, error) {
+	hashed, err := hashString(joinWithColon(parts...), hasher)
+	if err != nil {
+		return "", err
+	}
+	return hashed, nil
 }
 
 // hash returns the md5 hash of the supplied string
@@ -157,7 +166,7 @@ func joinWithColon(str ...string) string {
 }
 
 // parsedParameters checks if all fields required have been provided by the server; realm, nOnce, opaque and qop have to be set
-func (d digest) parsedParameters() bool {
+func (d *digest) parsedParameters() bool {
 	return !equalsEmptyString(d.realm, d.nOnce, d.opaque, d.qop)
 }
 
