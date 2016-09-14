@@ -2,7 +2,6 @@ package swclient
 
 import (
 	"fmt"
-	"hash"
 	"io"
 	"net/http"
 	"strings"
@@ -28,8 +27,7 @@ type digest struct {
 
 // generateRequest uses the provided information to generate a new http.Request which has all the necessary information
 // for digest-authentication
-// TODO: test this
-func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, hasher hash.Hash) (*http.Request, error) {
+func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, h hasher) (*http.Request, error) {
 	if !d.parsedParameters() {
 		auth := parseParameters(serverinfo)
 		d.realm = auth["realm"]
@@ -44,7 +42,7 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 		return nil, err
 	}
 	// calculate response to server challenge
-	response, err := d.calculateResponse(method, uri, username, key, hasher)
+	response, err := d.calculateResponse(method, uri, username, key, h)
 	if err != nil {
 		return nil, err
 	}
@@ -65,51 +63,42 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 }
 
 // calculateResponse calculates the response string the server requires
-func (d *digest) calculateResponse(method string, uri string, username string, key string, hasher hash.Hash) (string, error) {
+func (d *digest) calculateResponse(method string, uri string, username string, key string, h hasher) (string, error) {
 	// increment request count
 	d.nC += 0x1
-
 	// calculate new cNonce
-	cNonce, err := hashNow(hasher)
+	cNonce, err := hashNow(h)
 	if err != nil {
 		return "", err
 	}
 	d.cNonce = cNonce
-
 	// set method
 	d.method = method
-
 	// set uri
 	d.path = uri
-
 	// set credentials
 	d.name = username
 	d.key = key
-
 	// calculate aOne
-	aOne, err := hashWithColon(hasher, d.name, d.realm, d.key)
+	aOne, err := hashWithColon(h, d.name, d.realm, d.key)
 	if err != nil {
 		return "", err
 	}
 	// set aOne
 	d.aOne = aOne
-
 	// calculate aOne
-	aTwo, err := hashWithColon(hasher, d.method, d.path)
+	aTwo, err := hashWithColon(h, d.method, d.path)
 	if err != nil {
 		return "", err
 	}
 	// set aTwo
 	d.aTwo = aTwo
-
 	// calculate response
-	response, err := hashWithColon(hasher, d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
+	response, err := hashWithColon(h, d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
 	if err != nil {
 		return "", err
 	}
-
 	return response, nil
-
 }
 
 // parseParameters gets the values for realm, nOnce, opaque, algorithm and qop from a response header
@@ -135,8 +124,8 @@ func parseParameters(response *http.Response) map[string]string {
 }
 
 // hashWithColon takes a slice of string, joins its parts into a single string with colons and hashes that
-func hashWithColon(hasher hash.Hash, parts ...string) (string, error) {
-	hashed, err := hashString(joinWithColon(parts...), hasher)
+func hashWithColon(h hasher, parts ...string) (string, error) {
+	hashed, err := hashString(joinWithColon(parts...), h)
 	if err != nil {
 		return "", err
 	}
@@ -144,20 +133,20 @@ func hashWithColon(hasher hash.Hash, parts ...string) (string, error) {
 }
 
 // hash returns the md5 hash of the supplied string
-func hashString(str string, hasher hash.Hash) (string, error) {
+func hashString(str string, h hasher) (string, error) {
 	// reset hasher because it could have been used before
-	hasher.Reset()
+	h.Reset()
 
-	_, err := hasher.Write([]byte(str))
+	_, err := h.Write([]byte(str))
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%x", hasher.Sum(nil)), nil // %x renders the string in base 16
+	return fmt.Sprintf("%x", h.Sum(nil)), nil // %x renders the string in base 16
 }
 
 // hashNow returns the hashed system time at the time of execution
-func hashNow(hasher hash.Hash) (string, error) {
-	return hashString(time.Now().String(), hasher)
+func hashNow(h hasher) (string, error) {
+	return hashString(time.Now().String(), h)
 }
 
 // joinWithColon joins a slice of strings into one string separated with colons
