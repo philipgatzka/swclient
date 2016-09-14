@@ -3,7 +3,6 @@ package swclient
 import (
 	"bytes"
 	"crypto/md5"
-	"fmt"
 	"net/http"
 	"testing"
 )
@@ -77,7 +76,7 @@ func TestDigestGenerateRequest(t *testing.T) {
 
 func TestDigestCalculateResponse(t *testing.T) {
 	d := mockDigest
-	expected := fmt.Sprintf("%x", []byte("hello, this is mockHasher!"))
+	expected := "68656c6c6f2c2074686973206973206d6f636b48617368657221"
 
 	got, err := d.calculateResponse("GET", "http://hello.this/is/test", "user", "key", mockHasher{})
 	if err != nil {
