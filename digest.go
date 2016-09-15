@@ -25,8 +25,7 @@ type digest struct {
 	key       string
 }
 
-// generateRequest uses the provided information to generate a new http.Request which has all the necessary information
-// for digest-authentication
+// generateRequest uses the provided information to generate a new http.Request which has all the necessary information for digest-authentication
 func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, h hasher) (*http.Request, error) {
 	if !d.parsedParameters() {
 		auth := parseParameters(serverinfo)
