@@ -39,21 +39,28 @@ func (h *httpclient) request(method string, uri string, body io.Reader, username
 }
 
 // get executes a get request
-func (h httpclient) get(uri string, username string, key string, hshr hasher) (*http.Response, error) {
+func (h httpclient) Get(uri string, username string, key string, hshr hasher) (*http.Response, error) {
 	return h.request("GET", uri, bytes.NewBufferString(""), username, key, hshr)
 }
 
 // put executes a put request
-func (h httpclient) put(uri string, body io.Reader, username string, key string, hshr hasher) (*http.Response, error) {
+func (h httpclient) Put(uri string, body io.Reader, username string, key string, hshr hasher) (*http.Response, error) {
 	return h.request("PUT", uri, body, username, key, hshr)
 }
 
 // post executes a post request
-func (h httpclient) post(uri string, body io.Reader, username string, key string, hshr hasher) (*http.Response, error) {
+func (h httpclient) Post(uri string, body io.Reader, username string, key string, hshr hasher) (*http.Response, error) {
 	return h.request("POST", uri, body, username, key, hshr)
 }
 
 // del executes a delete request
-func (h httpclient) del(uri string, username string, key string, hshr hasher) (*http.Response, error) {
+func (h httpclient) Del(uri string, username string, key string, hshr hasher) (*http.Response, error) {
 	return h.request("DELETE", uri, bytes.NewBufferString(""), username, key, hshr)
+}
+
+func NewHttpclient() *httpclient {
+	return &httpclient{
+		d: &digest{},
+		c: &http.Client{},
+	}
 }
