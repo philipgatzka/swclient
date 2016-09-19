@@ -139,25 +139,3 @@ func TestDigestJoinWithColon(t *testing.T) {
 		t.Error("expected", expected, "got", got)
 	}
 }
-
-func TestDigestParsedParameters(t *testing.T) {
-	d := digest{}
-	if d.parsedParameters() {
-		t.Error("Expected h.isComplete() to be false")
-	}
-
-	d.realm = "somestring"
-	d.nOnce = "somestring"
-	d.opaque = "somestring"
-	d.qop = "somestring"
-
-	if !d.parsedParameters() {
-		t.Error("Expected h.isComplete() to be true")
-	}
-
-	d.realm = ""
-
-	if d.parsedParameters() {
-		t.Error("Expected h.isComplete() to be false")
-	}
-}

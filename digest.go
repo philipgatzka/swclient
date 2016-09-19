@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Digest holds all information required for a digest-request
+// digest holds all information required for a digest-request
 type digest struct {
 	realm     string
 	qop       string
@@ -26,22 +26,16 @@ type digest struct {
 }
 
 // generateRequest uses the provided information to generate a new http.Request which has all the necessary information for digest-authentication
-func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, h hasher) (*http.Request, error) {
-	if !d.parsedParameters() {
-		auth := parseParameters(serverinfo)
-		d.realm = auth["realm"]
-		d.nOnce = auth["nonce"]
-		d.opaque = auth["opaque"]
-		d.algorithm = auth["algorithm"]
-		d.qop = auth["qop"]
-	}
-	// generate standard request
-	request, err := http.NewRequest(method, uri, body)
-	if err != nil {
-		return nil, err
-	}
+func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, hshr hasher) (*http.Request, error) {
+	// parse server info
+	auth := parseParameters(serverinfo)
+	d.realm = auth["realm"]
+	d.nOnce = auth["nonce"]
+	d.opaque = auth["opaque"]
+	d.algorithm = auth["algorithm"]
+	d.qop = auth["qop"]
 	// calculate response to server challenge
-	response, err := d.calculateResponse(method, uri, username, key, h)
+	response, err := d.calculateResponse(method, uri, username, key, hshr)
 	if err != nil {
 		return nil, err
 	}
@@ -50,8 +44,13 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 		`Digest username="%s", realm="%s", nonce="%s", uri="%s", cnonce="%s", nc=%08x, qop=%s, response="%s"`,
 		d.name, d.realm, d.nOnce, d.path, d.cNonce, d.nC, d.qop, response)
 	// if an opaque was provided, add it
-	if d.opaque != "" {
+	if len(d.opaque) > 0 {
 		authHeader = fmt.Sprintf(`%s, opaque="%s"`, authHeader, d.opaque)
+	}
+	// generate standard request
+	request, err := http.NewRequest(method, uri, body)
+	if err != nil {
+		return nil, err
 	}
 	// set the authorization, host and content-type headers
 	request.Header.Set("Authorization", authHeader)
@@ -62,11 +61,11 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 }
 
 // calculateResponse calculates the response string the server requires
-func (d *digest) calculateResponse(method string, uri string, username string, key string, h hasher) (string, error) {
+func (d *digest) calculateResponse(method string, uri string, username string, key string, hshr hasher) (string, error) {
 	// increment request count
 	d.nC += 0x1
 	// calculate new cNonce
-	cNonce, err := hashNow(h)
+	cNonce, err := hashNow(hshr)
 	if err != nil {
 		return "", err
 	}
@@ -79,21 +78,21 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 	d.name = username
 	d.key = key
 	// calculate aOne
-	aOne, err := hashWithColon(h, d.name, d.realm, d.key)
+	aOne, err := hashWithColon(hshr, d.name, d.realm, d.key)
 	if err != nil {
 		return "", err
 	}
 	// set aOne
 	d.aOne = aOne
 	// calculate aOne
-	aTwo, err := hashWithColon(h, d.method, d.path)
+	aTwo, err := hashWithColon(hshr, d.method, d.path)
 	if err != nil {
 		return "", err
 	}
 	// set aTwo
 	d.aTwo = aTwo
 	// calculate response
-	response, err := hashWithColon(h, d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
+	response, err := hashWithColon(hshr, d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
 	if err != nil {
 		return "", err
 	}
@@ -123,8 +122,8 @@ func parseParameters(response *http.Response) map[string]string {
 }
 
 // hashWithColon takes a slice of string, joins its parts into a single string with colons and hashes that
-func hashWithColon(h hasher, parts ...string) (string, error) {
-	hashed, err := hashString(joinWithColon(parts...), h)
+func hashWithColon(hshr hasher, parts ...string) (string, error) {
+	hashed, err := hashString(joinWithColon(parts...), hshr)
 	if err != nil {
 		return "", err
 	}
@@ -132,38 +131,23 @@ func hashWithColon(h hasher, parts ...string) (string, error) {
 }
 
 // hash returns the md5 hash of the supplied string
-func hashString(str string, h hasher) (string, error) {
+func hashString(str string, hshr hasher) (string, error) {
 	// reset hasher because it could have been used before
-	h.Reset()
+	hshr.Reset()
 
-	_, err := h.Write([]byte(str))
+	_, err := hshr.Write([]byte(str))
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%x", h.Sum(nil)), nil // %x renders the string in base 16
+	return fmt.Sprintf("%x", hshr.Sum(nil)), nil // %x renders the string in base 16
 }
 
 // hashNow returns the hashed system time at the time of execution
-func hashNow(h hasher) (string, error) {
-	return hashString(time.Now().String(), h)
+func hashNow(hshr hasher) (string, error) {
+	return hashString(time.Now().String(), hshr)
 }
 
 // joinWithColon joins a slice of strings into one string separated with colons
 func joinWithColon(str ...string) string {
 	return strings.Join(str, ":")
-}
-
-// parsedParameters checks if all fields required have been provided by the server; realm, nOnce, opaque and qop have to be set
-func (d *digest) parsedParameters() bool {
-	return !equalsEmptyString(d.realm, d.nOnce, d.opaque, d.qop)
-}
-
-// equalsEmptyString returns true, if any of the provided strings is an empty string
-func equalsEmptyString(strings ...string) bool {
-	for _, s := range strings {
-		if s == "" {
-			return true
-		}
-	}
-	return false
 }
