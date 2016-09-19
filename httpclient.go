@@ -53,7 +53,7 @@ func (h httpclient) post(uri string, body io.Reader, username string, key string
 	return h.request("POST", uri, body, username, key, hshr)
 }
 
-// delete executes a delete request
-func (h httpclient) delete(uri string, username string, key string, hshr hasher) (*http.Response, error) {
+// del executes a delete request
+func (h httpclient) del(uri string, username string, key string, hshr hasher) (*http.Response, error) {
 	return h.request("DELETE", uri, bytes.NewBufferString(""), username, key, hshr)
 }
