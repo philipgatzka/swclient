@@ -1,5 +1,9 @@
 package swclient
 
+import (
+	"ioutil"
+)
+
 type swclient struct {
 	user    string
 	key     string
@@ -13,5 +17,10 @@ func NewSWClient(user string, key string, shopurl string) *swclient {
 }
 
 func (swc swclient) GetArticleById(id int) (string, error) {
-	return swc.h.get(shopurl+"/api/"+strconv.ItoA(id), swc.user, swc.key, swc.hshr)
+	resp, err := swc.h.get(shopurl+"/api/"+strconv.ItoA(id), swc.user, swc.key, swc.hshr)
+	if err != nil {
+		return "", err
+	}
+
+	ioutil.ReadAll(resp.Body)
 }
