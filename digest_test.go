@@ -50,7 +50,7 @@ func TestDigestGenerateRequest(t *testing.T) {
 		t.Error(err)
 	}
 
-	authHeader := `Digest username="test", realm="test", nonce="test", uri="test", cnonce="68656c6c6f2c2074686973206973206d6f636b48617368657221", nc=00000002, qop=test, response="68656c6c6f2c2074686973206973206d6f636b48617368657221", opaque="test"`
+	authHeader := `Digest username="test", realm="", nonce="", uri="test", cnonce="68656c6c6f2c2074686973206973206d6f636b48617368657221", nc=00000002, qop=, response="68656c6c6f2c2074686973206973206d6f636b48617368657221"`
 
 	expected.Header.Set("Authorization", authHeader)
 	expected.Header.Set("Host", expected.Host)

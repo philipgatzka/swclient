@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// digest holds all information required for a digest-request
+// digest holds all information required for digest-authentication
 type digest struct {
 	realm     string
 	qop       string
@@ -101,23 +101,31 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 
 // parseParameters gets the values for realm, nOnce, opaque, algorithm and qop from a response header
 func parseParameters(response *http.Response) map[string]string {
-	// get the protocol info from the responses auth header
-	responseAuthHeader := response.Header.Get("Www-Authenticate")
-	// trim "Digest " from the beginning of the response string
-	cleanAuthHeader := strings.Trim(responseAuthHeader, "Digest ")
-	// split the response string into a slice
-	keyValuePairs := strings.Split(cleanAuthHeader, ", ")
-
 	// auth will hold the all data that was supplied by the response string
 	auth := map[string]string{}
 
-	// split pair strings into keys and values and save them in auth[]
-	for _, pair := range keyValuePairs {
-		tuple := strings.Split(pair, "=")
-		key := tuple[0]
-		value := strings.Replace(tuple[1], "\"", "", -1) // this just strips tuple[1] from quotation marks
-		auth[key] = value
+	if response.Header.Get("Www-Authenticate") != "" {
+		// get the protocol info from the responses auth header
+		responseAuthHeader := response.Header.Get("Www-Authenticate")
+		if strings.Contains(responseAuthHeader, "Digest") {
+			// trim "Digest " from the beginning of the response string
+			cleanAuthHeader := strings.Trim(responseAuthHeader, "Digest ")
+			if strings.Contains(cleanAuthHeader, ", ") {
+				// split the response string into a slice
+				keyValuePairs := strings.Split(cleanAuthHeader, ", ")
+				if strings.Contains(keyValuePairs[0], "=") {
+					// split pair strings into keys and values and save them in auth[]
+					for _, pair := range keyValuePairs {
+						tuple := strings.Split(pair, "=")
+						key := tuple[0]
+						value := strings.Replace(tuple[1], "\"", "", -1) // this just strips tuple[1] from quotation marks
+						auth[key] = value
+					}
+				}
+			}
+		}
 	}
+
 	return auth
 }
 

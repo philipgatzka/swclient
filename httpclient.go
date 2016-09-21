@@ -7,8 +7,8 @@ import (
 )
 
 type httpclient struct {
-	d            *digest
-	c            *http.Client
+	dgst         *digest
+	httpc        *http.Client
 	lastResponse *http.Response
 }
 
@@ -17,7 +17,7 @@ func (h *httpclient) request(method string, uri string, body io.Reader, username
 	// if we need to (re-)authenticate
 	if h.lastResponse == nil || h.lastResponse.StatusCode != 200 {
 		// probe server
-		resp, err := h.c.Get(uri)
+		resp, err := h.httpc.Get(uri)
 		if err != nil {
 			return nil, err
 		}
@@ -25,12 +25,12 @@ func (h *httpclient) request(method string, uri string, body io.Reader, username
 		h.lastResponse = resp
 	}
 	// generate new request
-	req, err := h.d.generateRequest(method, uri, body, username, key, h.lastResponse, hshr)
+	req, err := h.dgst.generateRequest(method, uri, body, username, key, h.lastResponse, hshr)
 	if err != nil {
 		return nil, err
 	}
 	// execute, return
-	resp, err := h.c.Do(req)
+	resp, err := h.httpc.Do(req)
 	if err != nil {
 		return nil, err
 	}
@@ -56,11 +56,4 @@ func (h httpclient) post(uri string, body io.Reader, username string, key string
 // del executes a delete request
 func (h httpclient) del(uri string, username string, key string, hshr hasher) (*http.Response, error) {
 	return h.request("DELETE", uri, bytes.NewBufferString(""), username, key, hshr)
-}
-
-func NewHttpclient() *httpclient {
-	return &httpclient{
-		d: &digest{},
-		c: &http.Client{},
-	}
 }
