@@ -1,6 +1,7 @@
 package swclient
 
 import (
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -28,7 +29,10 @@ type digest struct {
 // generateRequest uses the provided information to generate a new http.Request which has all the necessary information for digest-authentication
 func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, hshr hasher) (*http.Request, error) {
 	// parse server info
-	auth := parseParameters(serverinfo)
+	auth, err := parseParameters(serverinfo)
+	if err != nil {
+		return nil, err
+	}
 	d.realm = auth["realm"]
 	d.nOnce = auth["nonce"]
 	d.opaque = auth["opaque"]
@@ -100,20 +104,24 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 }
 
 // parseParameters gets the values for realm, nOnce, opaque, algorithm and qop from a response header
-func parseParameters(response *http.Response) map[string]string {
+func parseParameters(response *http.Response) (map[string]string, error) {
 	// auth will hold the all data that was supplied by the response string
 	auth := map[string]string{}
 
 	if response.Header.Get("Www-Authenticate") != "" {
 		// get the protocol info from the responses auth header
 		responseAuthHeader := response.Header.Get("Www-Authenticate")
+
 		if strings.Contains(responseAuthHeader, "Digest") {
 			// trim "Digest " from the beginning of the response string
 			cleanAuthHeader := strings.Trim(responseAuthHeader, "Digest ")
+
 			if strings.Contains(cleanAuthHeader, ", ") {
 				// split the response string into a slice
 				keyValuePairs := strings.Split(cleanAuthHeader, ", ")
+
 				if strings.Contains(keyValuePairs[0], "=") {
+
 					// split pair strings into keys and values and save them in auth[]
 					for _, pair := range keyValuePairs {
 						tuple := strings.Split(pair, "=")
@@ -121,12 +129,20 @@ func parseParameters(response *http.Response) map[string]string {
 						value := strings.Replace(tuple[1], "\"", "", -1) // this just strips tuple[1] from quotation marks
 						auth[key] = value
 					}
+				} else {
+					return auth, errors.New("response header doesn't contain key=value pairs")
 				}
+			} else {
+				return auth, errors.New("response header doesn't contain enough info")
 			}
+		} else {
+			return auth, errors.New("no digest info in response header")
 		}
+	} else {
+		return auth, errors.New("no \"WWW-Authenticate\" field in response header")
 	}
 
-	return auth
+	return auth, nil
 }
 
 // hashWithColon takes a slice of string, joins its parts into a single string with colons and hashes that

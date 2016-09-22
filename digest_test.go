@@ -41,7 +41,11 @@ var mockDigest = digest{
 
 func TestDigestGenerateRequest(t *testing.T) {
 	d := mockDigest
-	serverinfo := &http.Response{}
+	authHeader := `Digest username="test", realm="test", nonce="test", uri="test", cnonce="68656c6c6f2c2074686973206973206d6f636b48617368657221", nc=00000002, qop=, response="68656c6c6f2c2074686973206973206d6f636b48617368657221"`
+
+	testHeader := map[string][]string{}
+	testHeader["Www-Authenticate"] = []string{authHeader}
+	serverinfo := &http.Response{Header: testHeader}
 
 	body := bytes.NewBufferString("test")
 
@@ -49,8 +53,6 @@ func TestDigestGenerateRequest(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-
-	authHeader := `Digest username="test", realm="", nonce="", uri="test", cnonce="68656c6c6f2c2074686973206973206d6f636b48617368657221", nc=00000002, qop=, response="68656c6c6f2c2074686973206973206d6f636b48617368657221"`
 
 	expected.Header.Set("Authorization", authHeader)
 	expected.Header.Set("Host", expected.Host)
@@ -98,7 +100,11 @@ func TestDigestParseParameters(t *testing.T) {
 	cases := []*http.Response{testResponse}
 
 	for _, c := range cases {
-		tuples := parseParameters(c)
+		tuples, err := parseParameters(c)
+		if err != nil {
+			t.Error(err)
+			t.FailNow()
+		}
 
 		if tuples["realm"] == "" {
 			t.Error("realm is empty")
