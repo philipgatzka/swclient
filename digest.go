@@ -28,16 +28,19 @@ type digest struct {
 
 // generateRequest uses the provided information to generate a new http.Request which has all the necessary information for digest-authentication
 func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, hshr hasher) (*http.Request, error) {
-	// parse server info
-	auth, err := parseParameters(serverinfo)
-	if err != nil {
-		return nil, err
+	// if serverinfo is given
+	if serverinfo != nil {
+		// parse server info
+		auth, err := parseParameters(serverinfo)
+		if err != nil {
+			return nil, err
+		}
+		d.realm = auth["realm"]
+		d.nOnce = auth["nonce"]
+		d.opaque = auth["opaque"]
+		d.algorithm = auth["algorithm"]
+		d.qop = auth["qop"]
 	}
-	d.realm = auth["realm"]
-	d.nOnce = auth["nonce"]
-	d.opaque = auth["opaque"]
-	d.algorithm = auth["algorithm"]
-	d.qop = auth["qop"]
 	// calculate response to server challenge
 	response, err := d.calculateResponse(method, uri, username, key, hshr)
 	if err != nil {
@@ -130,16 +133,16 @@ func parseParameters(response *http.Response) (map[string]string, error) {
 						auth[key] = value
 					}
 				} else {
-					return auth, errors.New("response header doesn't contain key=value pairs")
+					return auth, errors.New("response header doesn't contain key=value pairs, " + response.Status + ": \"" + response.Request.RequestURI + "\"")
 				}
 			} else {
-				return auth, errors.New("response header doesn't contain enough info")
+				return auth, errors.New("response header doesn't contain enough info, " + response.Status + ": \"" + response.Request.RequestURI + "\"")
 			}
 		} else {
-			return auth, errors.New("no digest info in response header")
+			return auth, errors.New("no digest info in response header, " + response.Status + ": \"" + response.Request.RequestURI + "\"")
 		}
 	} else {
-		return auth, errors.New("no \"WWW-Authenticate\" field in response header")
+		return auth, errors.New("no \"WWW-Authenticate\" field in response header, " + response.Status + ": \"" + response.Request.RequestURI + "\"")
 	}
 
 	return auth, nil
