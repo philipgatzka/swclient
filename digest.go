@@ -166,7 +166,7 @@ func hashString(str string, hshr hasher) (string, error) {
 	if err != nil {
 		return "", err
 	}
-	return fmt.Sprintf("%x", hshr.Sum(nil)), nil // %x renders the string in base 16
+	return fmt.Sprintf("%x", hshr.Sum(nil)), nil // %x -> base 16
 }
 
 // hashNow returns the hashed system time at the time of execution
