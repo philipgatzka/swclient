@@ -45,40 +45,49 @@ func (s *swclient) Resource(res string) *swclient {
 }
 
 // TODO: make all request methods members of a resource struct or find another way of ensuring a resource is given before request functions can be called
-func (s swclient) GetById(id int) (string, error) {
+func (s swclient) GetById(id int) ([]byte, error) {
 	return s.request("GET", strconv.Itoa(id), bytes.NewBufferString(""))
 }
 
-func (s swclient) Get() (string, error) {
+func (s swclient) Get() ([]byte, error) {
 	return s.request("GET", "", bytes.NewBufferString(""))
 }
 
-func (s swclient) PutById(id int, body io.Reader) (string, error) {
+func (s swclient) PutById(id int, body io.Reader) ([]byte, error) {
 	return s.request("PUT", strconv.Itoa(id), body)
 }
 
-func (s swclient) PostById(id int, body io.Reader) (string, error) {
+func (s swclient) PostById(id int, body io.Reader) ([]byte, error) {
 	return s.request("POST", strconv.Itoa(id), body)
 }
 
-func (s swclient) DelById(id int) (string, error) {
+func (s swclient) DelById(id int) ([]byte, error) {
 	return s.request("DELETE", strconv.Itoa(id), bytes.NewBufferString(""))
 }
 
-func (s swclient) request(method string, uri string, body io.Reader) (string, error) {
+// request executes a request of the given method
+func (s swclient) request(method string, uri string, body io.Reader) ([]byte, error) {
 	fullUri, err := s.constructUri(uri)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
+
 	resp, err := s.dgc.request(method, fullUri, body, s.user, s.key, s.hshr)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	resstr, err := responseString(resp)
+
+	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return "", err
+		return nil, err
 	}
-	return resstr, nil
+	resp.Body.Close()
+
+	if resp.StatusCode != 200 {
+		return nil, errors.New(resp.Status)
+	}
+
+	return b, nil
 }
 
 func (s *swclient) constructUri(uri string) (string, error) {
@@ -95,16 +104,4 @@ func (s *swclient) constructUri(uri string) (string, error) {
 	}
 
 	return u.String(), nil
-}
-
-func responseString(resp *http.Response) (string, error) {
-	b, err := ioutil.ReadAll(resp.Body)
-	if err != nil {
-		return "", err
-	}
-	if resp.StatusCode != 200 {
-		return "", errors.New(resp.Status)
-	}
-
-	return string(b), nil
 }
