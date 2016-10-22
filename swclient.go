@@ -24,11 +24,12 @@ type swclient struct {
 }
 
 // New returns an initialised swclient
-func New(user string, key string, apiurl string) *swclient {
+func New(user string, key string, apiurl string, resource string) *swclient {
 	return &swclient{
-		user:   user,
-		key:    key,
-		apiurl: apiurl,
+		user:     user,
+		key:      key,
+		apiurl:   apiurl,
+		resource: resource,
 		dgc: &digestclient{
 			dgst:  &digest{},
 			httpc: &http.Client{},
@@ -37,14 +38,6 @@ func New(user string, key string, apiurl string) *swclient {
 	}
 }
 
-// Resource sets the resource attribute of swclient to res
-// res will be appended to the apiurl before the next request
-func (s *swclient) Resource(res string) *swclient {
-	s.resource = res
-	return s
-}
-
-// TODO: make all request methods members of a resource struct or find another way of ensuring a resource is given before request functions can be called
 func (s swclient) GetById(id int) ([]byte, error) {
 	return s.request("GET", strconv.Itoa(id), bytes.NewBufferString(""))
 }
@@ -98,9 +91,8 @@ func (s *swclient) constructUri(uri string) (string, error) {
 
 	if len(s.resource) > 0 {
 		u.Path = path.Join(u.Path, s.resource, uri)
-		s.resource = ""
 	} else {
-		u.Path = path.Join(u.Path, uri)
+		return "", errors.New("Empty resource attribute! Please specify the desired resource (e.g. 'articles') when calling swclient.New()")
 	}
 
 	return u.String(), nil
