@@ -38,6 +38,11 @@ func New(user string, key string, apiurl string, resource string) *swclient {
 	}
 }
 
+func (s *swclient) Resource(res string) *swclient {
+	s.resource = res
+	return s
+}
+
 func (s swclient) GetById(id int) ([]byte, error) {
 	return s.request("GET", strconv.Itoa(id), bytes.NewBufferString(""))
 }
