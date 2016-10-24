@@ -24,7 +24,24 @@ type swclient struct {
 }
 
 // New returns an initialised swclient
-func New(user string, key string, apiurl string, resource string) *swclient {
+func New(user string, key string, apiurl string, resource string) (*swclient, error) {
+	// check input
+	if len(user) <= 0 {
+		return nil, errors.New("Can't create swclient: user not specified")
+	}
+
+	if len(key) <= 0 {
+		return nil, errors.New("Can't create swclient: api-key not specified")
+	}
+
+	if len(apiurl) <= 0 {
+		return nil, errors.New("Can't create swclient: url to api not specified")
+	}
+
+	if len(resource) <= 0 {
+		return nil, errors.New("Can't create swclient: no resource specified")
+	}
+	// initialise and return
 	return &swclient{
 		user:     user,
 		key:      key,
@@ -35,12 +52,15 @@ func New(user string, key string, apiurl string, resource string) *swclient {
 			httpc: &http.Client{},
 		},
 		hshr: md5.New(),
-	}
+	}, nil
 }
 
-func (s *swclient) Resource(res string) *swclient {
-	s.resource = res
-	return s
+func (s *swclient) Resource(resource string) (*swclient, error) {
+	if len(resource) <= 0 {
+		return nil, errors.New("No resource specified")
+	}
+	s.resource = resource
+	return s, nil
 }
 
 func (s swclient) GetById(id int) ([]byte, error) {
@@ -93,12 +113,8 @@ func (s *swclient) constructUri(uri string) (string, error) {
 	if err != nil {
 		return "", err
 	}
-
-	if len(s.resource) > 0 {
-		u.Path = path.Join(u.Path, s.resource, uri)
-	} else {
-		return "", errors.New("Empty resource attribute! Please specify the desired resource (e.g. 'articles') when calling swclient.New()")
-	}
-
+	// join elements
+	u.Path = path.Join(u.Path, s.resource, uri)
+	// return url as string
 	return u.String(), nil
 }

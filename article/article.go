@@ -20,7 +20,7 @@ type Article struct {
 	Changed           string
 	PriceGroupActive  bool
 	LastStock         bool
-	CrossBundleLook   bool
+	CrossBundleLook   int
 	Notification      bool
 	Template          string
 	Mode              int
@@ -36,9 +36,9 @@ type Article struct {
 	ConfiguratorSet   ConfiguratorSet
 	Links             []Link
 	Downloads         []Download
-	Categories        []Category
+	Categories        map[int]Category
 	Similar           []Similar
 	Related           []Related
 	Details           []Detail
-	Translations      []Translation
+	Translations      map[int]Translation
 }
