@@ -1,6 +1,6 @@
 package article
 
 type Category struct {
-	Id   int
-	Name string
+	Id   int    `json:",omitempty"`
+	Name string `json:",omitempty"`
 }

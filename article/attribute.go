@@ -1,26 +1,26 @@
 package article
 
 type Attribute struct {
-	Attr1           string
-	Attr2           string
-	Attr3           string
-	Attr4           string
-	Attr5           string
-	Attr6           string
-	Attr7           string
-	Attr8           string
-	Attr9           string
-	Attr10          string
-	Attr11          string
-	Attr12          string
-	Attr13          string
-	Attr14          string
-	Attr15          string
-	Attr16          string
-	Attr17          string
-	Attr18          string
-	Attr19          string
-	Attr20          string
-	ArticleId       int
-	ArticleDetailId int
+	Attr1           string `json:",omitempty"`
+	Attr2           string `json:",omitempty"`
+	Attr3           string `json:",omitempty"`
+	Attr4           string `json:",omitempty"`
+	Attr5           string `json:",omitempty"`
+	Attr6           string `json:",omitempty"`
+	Attr7           string `json:",omitempty"`
+	Attr8           string `json:",omitempty"`
+	Attr9           string `json:",omitempty"`
+	Attr10          string `json:",omitempty"`
+	Attr11          string `json:",omitempty"`
+	Attr12          string `json:",omitempty"`
+	Attr13          string `json:",omitempty"`
+	Attr14          string `json:",omitempty"`
+	Attr15          string `json:",omitempty"`
+	Attr16          string `json:",omitempty"`
+	Attr17          string `json:",omitempty"`
+	Attr18          string `json:",omitempty"`
+	Attr19          string `json:",omitempty"`
+	Attr20          string `json:",omitempty"`
+	ArticleId       int    `json:",omitempty"`
+	ArticleDetailId int    `json:",omitempty"`
 }

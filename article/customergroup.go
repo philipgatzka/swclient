@@ -1,15 +1,15 @@
 package article
 
 type CustomerGroup struct {
-	Id                    int
-	Key                   string
-	Name                  string
-	Tax                   bool
-	TaxInput              bool
-	Mode                  bool
-	Discount              float64
-	MinimumOrder          float64
-	MinimumOrderSurcharge float64
-	BasePrice             float64
-	Percent               float64
+	Id                    int     `json:",omitempty"`
+	Key                   string  `json:",omitempty"`
+	Name                  string  `json:",omitempty"`
+	Tax                   bool    `json:",omitempty"`
+	TaxInput              bool    `json:",omitempty"`
+	Mode                  bool    `json:",omitempty"`
+	Discount              float64 `json:",omitempty"`
+	MinimumOrder          float64 `json:",omitempty"`
+	MinimumOrderSurcharge float64 `json:",omitempty"`
+	BasePrice             float64 `json:",omitempty"`
+	Percent               float64 `json:",omitempty"`
 }

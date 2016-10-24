@@ -1,17 +1,17 @@
 package article
 
 type Image struct {
-	Id              int
-	ArticleId       int
-	ArticleDetailId int
-	Description     string
-	Path            string
-	Main            int
-	Position        int
-	Width           int
-	Height          int
-	Relations       string
-	Extension       string
-	ParentId        int
-	MediaId         int
+	Id              int    `json:",omitempty"`
+	ArticleId       int    `json:",omitempty"`
+	ArticleDetailId int    `json:",omitempty"`
+	Description     string `json:",omitempty"`
+	Path            string `json:",omitempty"`
+	Main            int    `json:",omitempty"`
+	Position        int    `json:",omitempty"`
+	Width           int    `json:",omitempty"`
+	Height          int    `json:",omitempty"`
+	Relations       string `json:",omitempty"`
+	Extension       string `json:",omitempty"`
+	ParentId        int    `json:",omitempty"`
+	MediaId         int    `json:",omitempty"`
 }

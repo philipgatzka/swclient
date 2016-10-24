@@ -13,6 +13,15 @@ import (
 	"strconv"
 )
 
+type Swclient interface {
+	Resource(string) (*swclient, error)
+	Get() ([]byte, error)
+	GetById(id int) ([]byte, error)
+	PutById(id int, body io.Reader) ([]byte, error)
+	PostById(id int, body io.Reader) ([]byte, error)
+	DelById(id int) ([]byte, error)
+}
+
 // swclient wraps the package and holds client and server information
 type swclient struct {
 	user     string
