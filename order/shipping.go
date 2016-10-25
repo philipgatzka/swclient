@@ -1,19 +1,19 @@
 package order
 
 type Shipping struct {
-	id           int
-	customerId   int
-	countryId    int
-	stateId      int
-	company      string
-	department   string
-	salutation   string
-	number       string
-	firstName    string
-	lastName     string
-	street       string
-	streetNumber string
-	zipCode      string
-	city         string
-	attribute    *ShippingAttribute
+	Id           int                `json:",omitempty"`
+	CustomerId   int                `json:",omitempty"`
+	CountryId    int                `json:",omitempty"`
+	StateId      int                `json:",omitempty"`
+	Company      string             `json:",omitempty"`
+	Department   string             `json:",omitempty"`
+	Salutation   string             `json:",omitempty"`
+	Number       string             `json:",omitempty"`
+	FirstName    string             `json:",omitempty"`
+	LastName     string             `json:",omitempty"`
+	Street       string             `json:",omitempty"`
+	StreetNumber string             `json:",omitempty"`
+	ZipCode      string             `json:",omitempty"`
+	City         string             `json:",omitempty"`
+	Attribute    *ShippingAttribute `json:",omitempty"`
 }

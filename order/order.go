@@ -10,7 +10,7 @@ type Order struct {
 	CustomerId         int              `json:",omitempty"`
 	PaymentId          int              `json:",omitempty"`
 	DispatchId         int              `json:",omitempty"`
-	PartnerId          int              `json:",omitempty"`
+	PartnerId          string           `json:",omitempty"`
 	ShopId             int              `json:",omitempty"`
 	InvoiceAmount      float64          `json:",omitempty"`
 	InvoiceAmountNet   float64          `json:",omitempty"`
@@ -21,13 +21,13 @@ type Order struct {
 	Comment            string           `json:",omitempty"`
 	CustomerComment    string           `json:",omitempty"`
 	InternalComment    string           `json:",omitempty"`
-	Net                bool             `json:",omitempty"`
-	TaxFree            bool             `json:",omitempty"`
+	Net                int              `json:",omitempty"`
+	TaxFree            int              `json:",omitempty"`
 	TemporaryId        string           `json:",omitempty"`
 	Referer            string           `json:",omitempty"`
 	ClearedDate        string           `json:",omitempty"`
 	TrackingCode       string           `json:",omitempty"`
-	LanguageIso        int              `json:",omitempty"`
+	LanguageIso        string           `json:",omitempty"`
 	Currency           string           `json:",omitempty"`
 	CurrencyFactor     float64          `json:",omitempty"`
 	RemoteAddress      string           `json:",omitempty"`
