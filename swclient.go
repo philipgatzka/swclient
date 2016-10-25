@@ -11,7 +11,6 @@ import (
 	"net/http"
 	"net/url"
 	"path"
-	"strconv"
 )
 
 // TODO: higher-level functions like Put(id int, a article.Article)
@@ -20,10 +19,10 @@ import (
 type Swclient interface {
 	Resource(string) (*swclient, error)
 	Get() (*Response, error)
-	GetById(id int) (*Response, error)
-	PutById(id int, body io.Reader) (*Response, error)
-	PostById(id int, body io.Reader) (*Response, error)
-	DelById(id int) (*Response, error)
+	GetById(id string) (*Response, error)
+	PutById(id string, body io.Reader) (*Response, error)
+	PostById(id string, body io.Reader) (*Response, error)
+	DelById(id string) (*Response, error)
 }
 
 // swclient holds client and server information
@@ -35,12 +34,6 @@ type swclient struct {
 	resource    string
 	dgc         *digestclient
 	hshr        hash.Hash
-}
-
-// Response defines a response from shopware
-type Response struct {
-	Data    json.RawMessage
-	Success bool
 }
 
 // New returns an initialised swclient
@@ -91,8 +84,8 @@ func (s *swclient) Resource(resource string) (*swclient, error) {
 }
 
 // GetById gets an object of the type specified in swclient.New() or swclient.Resource() from the shopware-api
-func (s swclient) GetById(id int) (*Response, error) {
-	return s.request("GET", strconv.Itoa(id), bytes.NewBufferString(""))
+func (s swclient) GetById(id string) (*Response, error) {
+	return s.request("GET", id, bytes.NewBufferString(""))
 }
 
 // Get gets a list of objects of the type specified in swclient.New() or swclient.Resource() from the shopware-api
@@ -101,18 +94,18 @@ func (s swclient) Get() (*Response, error) {
 }
 
 // PutById modifies an object of the type specified in swclient.New() or swclient.Resource() via the shopware-api
-func (s swclient) PutById(id int, body io.Reader) (*Response, error) {
-	return s.request("PUT", strconv.Itoa(id), body)
+func (s swclient) PutById(id string, body io.Reader) (*Response, error) {
+	return s.request("PUT", id, body)
 }
 
 // PostById creates an object of the type specified in swclient.New() or swclient.Resource() via the shopware-api
-func (s swclient) PostById(id int, body io.Reader) (*Response, error) {
-	return s.request("POST", strconv.Itoa(id), body)
+func (s swclient) PostById(id string, body io.Reader) (*Response, error) {
+	return s.request("POST", id, body)
 }
 
 // DelById deletes an object of the type specified in swclient.New() or swclient.Resource() via the shopware-api
-func (s swclient) DelById(id int) (*Response, error) {
-	return s.request("DELETE", strconv.Itoa(id), bytes.NewBufferString(""))
+func (s swclient) DelById(id string) (*Response, error) {
+	return s.request("DELETE", id, bytes.NewBufferString(""))
 }
 
 // request executes an http-request of the given method
