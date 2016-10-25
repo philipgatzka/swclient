@@ -13,11 +13,13 @@ import (
 // error-handling omitted for better readability
 
 func main() {
-        // create a new api-client providing user, key, api-url and api-resource
+        // create new client providing user, key, api-url and api-resource
 	    s, _ := swclient.New("user", "key", "https://shop.ware/api", "articles")
         get(s)
+	put(s)
 }
 
+// example GET request
 func get(s swclient.Swclient) {
         // execute request
     	response, _ := s.GetById(4)
@@ -29,6 +31,7 @@ func get(s swclient.Swclient) {
     	fmt.Println("inStock:", artcl.Data.MainDetail.InStock)
 }
 
+// example PUT request
 func put(s swclient.Swclient) {
         // define changes
         changeset := article.Data{
@@ -45,13 +48,8 @@ func put(s swclient.Swclient) {
         
         // execute request
     	response, _ := s.PutById(4, b)
-        
-        // maybe inspect the returned data
-    	artcl := article.Article{}
-    	_ = json.Unmarshal(response, &artcl)
-    	
-        if !artcl.Success {
-                // do something
-        }
+	
+	// maybe inspect returned data
+	fmt.Println(string(response))
 }
 ```
