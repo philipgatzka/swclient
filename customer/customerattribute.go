@@ -1,7 +1,6 @@
 package customer
 
-// TODO
 type CustomerAttribute struct {
-	id         int
-	customerId int
+	Id         int `json:",omitempty"`
+	CustomerId int `json:",omitempty"`
 }

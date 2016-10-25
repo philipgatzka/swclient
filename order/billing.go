@@ -1,4 +1,4 @@
-package customer
+package order
 
 type Billing struct {
 	Id           int               `json:",omitempty"`
