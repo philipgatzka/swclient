@@ -28,18 +28,19 @@ type Swclient interface {
 
 // swclient holds client and server information
 type swclient struct {
-	user     string
-	key      string
-	apiurl   string
-	resource string
-	dgc      *digestclient
-	hshr     hash.Hash
+	user        string
+	key         string
+	baseurl     *url.URL
+	apiEndpoint string
+	resource    string
+	dgc         *digestclient
+	hshr        hash.Hash
 }
 
 // Response defines a response from shopware
 type Response struct {
-	Data    json.RawMessage `json:",omitempty"`
-	Success bool            `json:",omitempty"`
+	Data    json.RawMessage
+	Success bool
 }
 
 // New returns an initialised swclient
@@ -57,15 +58,21 @@ func New(user string, key string, apiurl string, resource string) (*swclient, er
 		return nil, errors.New("Can't create swclient: url to api not specified")
 	}
 
+	u, err := url.Parse(apiurl)
+	if err != nil {
+		return nil, err
+	}
+
 	if len(resource) <= 0 {
 		return nil, errors.New("Can't create swclient: no resource specified")
 	}
 	// initialise and return
 	return &swclient{
-		user:     user,
-		key:      key,
-		apiurl:   apiurl,
-		resource: resource,
+		user:        user,
+		key:         key,
+		baseurl:     u,
+		apiEndpoint: u.Path,
+		resource:    resource,
 		dgc: &digestclient{
 			dgst:  &digest{},
 			httpc: &http.Client{},
@@ -109,13 +116,12 @@ func (s swclient) DelById(id int) (*Response, error) {
 }
 
 // request executes an http-request of the given method
-func (s swclient) request(method string, uri string, body io.Reader) (*Response, error) {
-	fullUri, err := s.constructUri(uri)
-	if err != nil {
-		return nil, err
-	}
+func (s *swclient) request(method string, id string, body io.Reader) (*Response, error) {
+	// join shopware base-url, api-endpoint, resource and id
+	s.baseurl.Path = path.Join(s.apiEndpoint, s.resource, id)
 
-	resp, err := s.dgc.request(method, fullUri, body, s.user, s.key, s.hshr)
+	// execute
+	resp, err := s.dgc.request(method, s.baseurl.String(), body, s.user, s.key, s.hshr)
 	if err != nil {
 		return nil, err
 	}
@@ -123,7 +129,7 @@ func (s swclient) request(method string, uri string, body io.Reader) (*Response,
 	if resp.StatusCode != 200 {
 		return nil, errors.New(resp.Status)
 	}
-
+	// read response
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, err
@@ -138,15 +144,4 @@ func (s swclient) request(method string, uri string, body io.Reader) (*Response,
 	}
 
 	return &data, nil
-}
-
-func (s *swclient) constructUri(uri string) (string, error) {
-	u, err := url.Parse(s.apiurl)
-	if err != nil {
-		return "", err
-	}
-	// join elements
-	u.Path = path.Join(u.Path, s.resource, uri)
-	// return url as string
-	return u.String(), nil
 }
