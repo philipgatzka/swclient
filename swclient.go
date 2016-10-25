@@ -13,6 +13,8 @@ import (
 	"strconv"
 )
 
+// TODO: higher-level functions like Put(id int, a article.Article)
+
 type Swclient interface {
 	Resource(string) (*swclient, error)
 	Get() ([]byte, error)
