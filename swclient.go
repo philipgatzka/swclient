@@ -11,33 +11,28 @@ import (
 	"net/http"
 	"net/url"
 	"path"
+	"reflect"
 )
-
-// TODO: higher-level functions like Put(id int, a article.Article)
 
 // Swclient defines the interface this library exposes
 type Swclient interface {
-	Resource(string) (*swclient, error)
-	Get() (*Response, error)
-	GetById(id string) (*Response, error)
-	PutById(id string, body io.Reader) (*Response, error)
-	PostById(id string, body io.Reader) (*Response, error)
-	DelById(id string) (*Response, error)
+	GetSingle(id string, o interface{}) error
+	GetSingleRaw(resource string, id string) (*Response, error)
 }
 
 // swclient holds client and server information
 type swclient struct {
-	user        string
-	key         string
-	baseurl     *url.URL
-	apiEndpoint string
-	resource    string
-	dgc         *digestclient
-	hshr        hash.Hash
+	user      string
+	key       string
+	baseurl   *url.URL
+	apiurl    string
+	resources map[string]string
+	dgc       *digestclient
+	hshr      hash.Hash
 }
 
 // New returns an initialised swclient
-func New(user string, key string, apiurl string, resource string) (*swclient, error) {
+func New(user string, key string, apiurl string) (Swclient, error) {
 	// check input
 	if len(user) <= 0 {
 		return nil, errors.New("Can't create swclient: user not specified")
@@ -56,62 +51,67 @@ func New(user string, key string, apiurl string, resource string) (*swclient, er
 		return nil, err
 	}
 
-	if len(resource) <= 0 {
-		return nil, errors.New("Can't create swclient: no resource specified")
+	resources := map[string]string{
+		"*address.Address":           "addresses",
+		"*article.Article":           "articles",
+		"*cache.Cache":               "caches",
+		"*category.Category":         "categories",
+		"*country.Country":           "countries",
+		"*customer.Customer":         "customers",
+		"*manufacturer.Manufacturer": "manufacturers",
+		"*media.Media":               "media",
+		"*order.Order":               "orders",
+		"*shop.Shop":                 "shops",
+		"*translation.Translation":   "translations",
+		"*variant.Variant":           "variants",
 	}
+
 	// initialise and return
 	return &swclient{
-		user:        user,
-		key:         key,
-		baseurl:     u,
-		apiEndpoint: u.Path,
-		resource:    resource,
+		user:    user,
+		key:     key,
+		baseurl: u,
+		apiurl:  u.Path,
 		dgc: &digestclient{
 			dgst:  &digest{},
 			httpc: &http.Client{},
 		},
-		hshr: md5.New(),
+		hshr:      md5.New(),
+		resources: resources,
 	}, nil
 }
 
-// Resource changes the api-resource swclient points to
-func (s *swclient) Resource(resource string) (*swclient, error) {
-	if len(resource) <= 0 {
-		return nil, errors.New("No resource specified")
+// GetSingle
+func (s *swclient) GetSingle(id string, o interface{}) error {
+	// get the type of the object getting passed in as string
+	t := reflect.TypeOf(o).String()
+	// check if this type leads to a resource of the shopware api
+	res, ok := s.resources[t]
+	if ok {
+		resp, err := s.request("GET", res, id, bytes.NewBufferString(""))
+		if err != nil {
+			return err
+		}
+
+		err = json.Unmarshal(resp.Data, o)
+		if err != nil {
+			return err
+		}
+	} else {
+		return errors.New("Type " + t + " is not a valid resource!")
 	}
-	s.resource = resource
-	return s, nil
+	return nil
 }
 
-// GetById gets an object of the type specified in swclient.New() or swclient.Resource() from the shopware-api
-func (s swclient) GetById(id string) (*Response, error) {
-	return s.request("GET", id, bytes.NewBufferString(""))
-}
-
-// Get gets a list of objects of the type specified in swclient.New() or swclient.Resource() from the shopware-api
-func (s swclient) Get() (*Response, error) {
-	return s.request("GET", "", bytes.NewBufferString(""))
-}
-
-// PutById modifies an object of the type specified in swclient.New() or swclient.Resource() via the shopware-api
-func (s swclient) PutById(id string, body io.Reader) (*Response, error) {
-	return s.request("PUT", id, body)
-}
-
-// PostById creates an object of the type specified in swclient.New() or swclient.Resource() via the shopware-api
-func (s swclient) PostById(id string, body io.Reader) (*Response, error) {
-	return s.request("POST", id, body)
-}
-
-// DelById deletes an object of the type specified in swclient.New() or swclient.Resource() via the shopware-api
-func (s swclient) DelById(id string) (*Response, error) {
-	return s.request("DELETE", id, bytes.NewBufferString(""))
+// GetRaw
+func (s swclient) GetSingleRaw(resource string, id string) (*Response, error) {
+	return s.request("GET", resource, id, bytes.NewBufferString(""))
 }
 
 // request executes an http-request of the given method
-func (s *swclient) request(method string, id string, body io.Reader) (*Response, error) {
+func (s *swclient) request(method string, resource string, id string, body io.Reader) (*Response, error) {
 	// join shopware base-url, api-endpoint, resource and id
-	s.baseurl.Path = path.Join(s.apiEndpoint, s.resource, id)
+	s.baseurl.Path = path.Join(s.apiurl, resource, id)
 
 	// execute
 	resp, err := s.dgc.request(method, s.baseurl.String(), body, s.user, s.key, s.hshr)
