@@ -85,7 +85,8 @@ func New(user string, key string, apiurl string) (Swclient, error) {
 
 // GetSingle
 func (s swclient) GetSingle(id string, o interface{}) error {
-	if res, ok := s.typeIsResource(o); ok {
+	// TODO: compare reflect.TypeOf() with struct instead of reflect.TypeOf().String() with string
+	if res, ok := s.resources[reflect.TypeOf(o).String()]; ok {
 		resp, err := s.GetSingleRaw(res, id)
 		if err != nil {
 			return err
@@ -108,7 +109,7 @@ func (s swclient) GetSingleRaw(resource string, id string) (*Response, error) {
 
 // PutSingle
 func (s swclient) PutSingle(id string, o interface{}) (*Response, error) {
-	if res, ok := s.typeIsResource(o); ok {
+	if res, ok := s.resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
 			return nil, err
@@ -122,12 +123,6 @@ func (s swclient) PutSingle(id string, o interface{}) (*Response, error) {
 // PutSingleRaw
 func (s swclient) PutSingleRaw(resource string, id string, body io.Reader) (*Response, error) {
 	return s.request("PUT", resource, id, body)
-}
-
-// typeIsResource checks if the given type has a type->resource mapping (and therefore is a resource of the shopware api)
-func (s swclient) typeIsResource(o interface{}) (string, bool) {
-	res, isResource := s.resources[reflect.TypeOf(o).String()]
-	return res, isResource
 }
 
 // request executes an http-request of the given method
