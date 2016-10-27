@@ -1,8 +1,8 @@
-package manufacturers
+package manufacturer
 
 import "encoding/json"
 
-type Manufacturers struct {
+type Manufacturer struct {
 	Id              int                `json:",omitempty"`
 	Name            string             `json:",omitempty"`
 	Image           string             `json:",omitempty"`

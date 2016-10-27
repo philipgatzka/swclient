@@ -1,7 +1,6 @@
 package swclient
 
 import (
-	"errors"
 	"fmt"
 	"io"
 	"net/http"
@@ -33,7 +32,7 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 		// parse server info
 		auth, err := parseParameters(serverinfo)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s, %s: %s", "swclient/digest.go", "generateRequest()", err)
 		}
 		d.realm = auth["realm"]
 		d.nOnce = auth["nonce"]
@@ -44,7 +43,7 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 	// calculate response to server challenge
 	response, err := d.calculateResponse(method, uri, username, key, hshr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/digest.go", "generateRequest()", err)
 	}
 	// construct the digest header string
 	authHeader := fmt.Sprintf(
@@ -57,7 +56,7 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 	// generate standard request
 	request, err := http.NewRequest(method, uri, body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/digest.go", "generateRequest()", err)
 	}
 	// set the authorization, host and content-type headers
 	request.Header.Set("Authorization", authHeader)
@@ -74,7 +73,7 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 	// calculate new cNonce
 	cNonce, err := hashNow(hshr)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s, %s: %s", "swclient/digest.go", "calculateResponse()", err)
 	}
 	d.cNonce = cNonce
 	// set method
@@ -87,21 +86,21 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 	// calculate aOne
 	aOne, err := hashWithColon(hshr, d.name, d.realm, d.key)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s, %s: %s", "swclient/digest.go", "calculateResponse()", err)
 	}
 	// set aOne
 	d.aOne = aOne
 	// calculate aOne
 	aTwo, err := hashWithColon(hshr, d.method, d.path)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s, %s: %s", "swclient/digest.go", "calculateResponse()", err)
 	}
 	// set aTwo
 	d.aTwo = aTwo
 	// calculate response
 	response, err := hashWithColon(hshr, d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s, %s: %s", "swclient/digest.go", "calculateResponse()", err)
 	}
 	return response, nil
 }
@@ -133,16 +132,16 @@ func parseParameters(response *http.Response) (map[string]string, error) {
 						auth[key] = value
 					}
 				} else {
-					return auth, errors.New("response header doesn't contain key=value pairs, " + response.Status + ": \"" + response.Request.RequestURI + "\"")
+					return auth, fmt.Errorf("%s, %s: Response header doesn't contain key=value pairs. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
 				}
 			} else {
-				return auth, errors.New("response header doesn't contain enough info, " + response.Status + ": \"" + response.Request.RequestURI + "\"")
+				return auth, fmt.Errorf("%s, %s: Response header doesn't contain enough info. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
 			}
 		} else {
-			return auth, errors.New("no digest info in response header, " + response.Status + ": \"" + response.Request.RequestURI + "\"")
+			return auth, fmt.Errorf("%s, %s: No digest info in response header. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
 		}
 	} else {
-		return auth, errors.New("no \"WWW-Authenticate\" field in response header, " + response.Status + ": \"" + response.Request.RequestURI + "\"")
+		return auth, fmt.Errorf("%s, %s: No \"Www-Authenticate\"-field in response header. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
 	}
 
 	return auth, nil
@@ -152,7 +151,7 @@ func parseParameters(response *http.Response) (map[string]string, error) {
 func hashWithColon(hshr hasher, parts ...string) (string, error) {
 	hashed, err := hashString(joinWithColon(parts...), hshr)
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s, %s: %s", "swclient/digest.go", "hashWithColon()", err)
 	}
 	return hashed, nil
 }
@@ -164,7 +163,7 @@ func hashString(str string, hshr hasher) (string, error) {
 
 	_, err := hshr.Write([]byte(str))
 	if err != nil {
-		return "", err
+		return "", fmt.Errorf("%s, %s: %s", "swclient/digest.go", "hashString()", err)
 	}
 	return fmt.Sprintf("%x", hshr.Sum(nil)), nil // %x -> base 16
 }

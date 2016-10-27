@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"crypto/md5"
 	"encoding/json"
-	"errors"
 	"hash"
 	"io"
 	"io/ioutil"
@@ -12,6 +11,7 @@ import (
 	"net/url"
 	"path"
 	"reflect"
+	"fmt"
 )
 
 // Swclient defines the interface this library exposes
@@ -37,20 +37,20 @@ type swclient struct {
 func New(user string, key string, apiurl string) (Swclient, error) {
 	// check input
 	if len(user) <= 0 {
-		return nil, errors.New("Can't create swclient: user not specified")
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "New()", "Can't create swclient: user not specified")
 	}
 
 	if len(key) <= 0 {
-		return nil, errors.New("Can't create swclient: api-key not specified")
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "New()", "Can't create swclient: key not specified")
 	}
 
 	if len(apiurl) <= 0 {
-		return nil, errors.New("Can't create swclient: url to api not specified")
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "New()", "Can't create swclient: api-url not specified")
 	}
 
 	u, err := url.Parse(apiurl)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "New()", err)
 	}
 
 	resources := map[string]string{
@@ -85,19 +85,18 @@ func New(user string, key string, apiurl string) (Swclient, error) {
 
 // GetSingle
 func (s swclient) GetSingle(id string, o interface{}) error {
-	// TODO: compare reflect.TypeOf() with struct instead of reflect.TypeOf().String() with string
 	if res, ok := s.resources[reflect.TypeOf(o).String()]; ok {
 		resp, err := s.GetSingleRaw(res, id)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "GetSingle()", err)
 		}
 
 		err = json.Unmarshal(resp.Data, o)
 		if err != nil {
-			return err
+			return fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "GetSingle()", err)
 		}
 	} else {
-		return errors.New("Passed type is not a resource of the shopware api!")
+		return fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "GetSingle()", "Passed type is not a resource of the shopware api!")
 	}
 	return nil
 }
@@ -112,11 +111,11 @@ func (s swclient) PutSingle(id string, o interface{}) (*Response, error) {
 	if res, ok := s.resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
-			return nil, err
+			return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "GetSingle()", err)
 		}
 		return s.request("PUT", res, id, bytes.NewReader(bts))
 	} else {
-		return nil, errors.New("Passed type is not a resource of the shopware api!")
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "PutSingle()", "Passed type is not a resource of the shopware api!")
 	}
 }
 
@@ -133,16 +132,16 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	// execute
 	resp, err := s.dgc.request(method, s.baseurl.String(), body, s.user, s.key, s.hshr)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "request()", err)
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, errors.New(resp.Status)
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "request()", resp.Status)
 	}
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "request()", err)
 	}
 	resp.Body.Close()
 
@@ -150,7 +149,7 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	data := Response{}
 	err = json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, err
+		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "request()", err)
 	}
 
 	return &data, nil
