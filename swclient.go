@@ -33,24 +33,35 @@ type swclient struct {
 	hshr      hash.Hash
 }
 
+// swerror provides better error messages
+type swerror struct {
+	file string
+	function string
+	message string
+}
+
+func (s swerror) Error() string{
+	return fmt.Sprintf("\n%s, %s: %s", s.file, s.function, s.message)
+}
+
 // New returns an initialised swclient
 func New(user string, key string, apiurl string) (Swclient, error) {
 	// check input
 	if len(user) <= 0 {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "New()", "Can't create swclient: user not specified")
+		return nil, swerror{"swclient/swclient.go", "New()", "Can't create swclient: user not specified"}
 	}
 
 	if len(key) <= 0 {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "New()", "Can't create swclient: key not specified")
+		return nil, swerror{"swclient/swclient.go", "New()", "Can't create swclient: key not specified"}
 	}
 
 	if len(apiurl) <= 0 {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "New()", "Can't create swclient: api-url not specified")
+		return nil, swerror{"swclient/swclient.go", "New()", "Can't create swclient: api-url not specified"}
 	}
 
 	u, err := url.Parse(apiurl)
 	if err != nil {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "New()", err)
+		return nil, swerror{"swclient/swclient.go", "New()", err.Error()}
 	}
 
 	resources := map[string]string{
@@ -88,15 +99,15 @@ func (s swclient) GetSingle(id string, o interface{}) error {
 	if res, ok := s.resources[reflect.TypeOf(o).String()]; ok {
 		resp, err := s.GetSingleRaw(res, id)
 		if err != nil {
-			return fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "GetSingle()", err)
+			return swerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
 
 		err = json.Unmarshal(resp.Data, o)
 		if err != nil {
-			return fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "GetSingle()", err)
+			return swerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
 	} else {
-		return fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "GetSingle()", "Passed type is not a resource of the shopware api!")
+		return swerror{"swclient/swclient.go", "GetSingle()", "Passed type is not a resource of the shopware api!"}
 	}
 	return nil
 }
@@ -111,11 +122,11 @@ func (s swclient) PutSingle(id string, o interface{}) (*Response, error) {
 	if res, ok := s.resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
-			return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "GetSingle()", err)
+			return nil, swerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
 		return s.request("PUT", res, id, bytes.NewReader(bts))
 	} else {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "PutSingle()", "Passed type is not a resource of the shopware api!")
+		return nil, swerror{"swclient/swclient.go", "PutSingle()", "Passed type is not a resource of the shopware api!"}
 	}
 }
 
@@ -132,16 +143,16 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	// execute
 	resp, err := s.dgc.request(method, s.baseurl.String(), body, s.user, s.key, s.hshr)
 	if err != nil {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "request()", err)
+		return nil, swerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "request()", resp.Status)
+		return nil, swerror{"swclient/swclient.go", "request()", resp.Status}
 	}
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "request()", err)
+		return nil, swerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 	resp.Body.Close()
 
@@ -149,7 +160,7 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	data := Response{}
 	err = json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, fmt.Errorf("%s, %s: %s", "swclient/swclient.go", "request()", err)
+		return nil, swerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 
 	return &data, nil
