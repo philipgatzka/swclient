@@ -18,6 +18,8 @@ import (
 type Swclient interface {
 	GetSingle(id string, o interface{}) error
 	GetSingleRaw(resource string, id string) (*Response, error)
+	PutSingle(id string, o interface{}) (*Response, error)
+	PutSingleRaw(resource string, id string, body io.Reader) (*Response, error)
 }
 
 // swclient holds client and server information
@@ -82,13 +84,9 @@ func New(user string, key string, apiurl string) (Swclient, error) {
 }
 
 // GetSingle
-func (s *swclient) GetSingle(id string, o interface{}) error {
-	// get the type of the object getting passed in as string
-	t := reflect.TypeOf(o).String()
-	// check if this type leads to a resource of the shopware api
-	res, ok := s.resources[t]
-	if ok {
-		resp, err := s.request("GET", res, id, bytes.NewBufferString(""))
+func (s swclient) GetSingle(id string, o interface{}) error {
+	if res, ok := s.typeIsResource(o); ok {
+		resp, err := s.GetSingleRaw(res, id)
 		if err != nil {
 			return err
 		}
@@ -98,14 +96,38 @@ func (s *swclient) GetSingle(id string, o interface{}) error {
 			return err
 		}
 	} else {
-		return errors.New("Type " + t + " is not a valid resource!")
+		return errors.New("Passed type is not a resource of the shopware api!")
 	}
 	return nil
 }
 
-// GetRaw
+// GetSinglRaw
 func (s swclient) GetSingleRaw(resource string, id string) (*Response, error) {
 	return s.request("GET", resource, id, bytes.NewBufferString(""))
+}
+
+// PutSingle
+func (s swclient) PutSingle(id string, o interface{}) (*Response, error) {
+	if res, ok := s.typeIsResource(o); ok {
+		bts, err := json.Marshal(o)
+		if err != nil {
+			return nil, err
+		}
+		return s.request("PUT", res, id, bytes.NewReader(bts))
+	} else {
+		return nil, errors.New("Passed type is not a resource of the shopware api!")
+	}
+}
+
+// PutSingleRaw
+func (s swclient) PutSingleRaw(resource string, id string, body io.Reader) (*Response, error) {
+	return s.request("PUT", resource, id, body)
+}
+
+// typeIsResource checks if the given type has a type->resource mapping (and therefore is a resource of the shopware api)
+func (s swclient) typeIsResource(o interface{}) (string, bool) {
+	res, isResource := s.resources[reflect.TypeOf(o).String()]
+	return res, isResource
 }
 
 // request executes an http-request of the given method
