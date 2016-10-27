@@ -110,38 +110,33 @@ func parseParameters(response *http.Response) (map[string]string, error) {
 	// auth will hold the all data that was supplied by the response string
 	auth := map[string]string{}
 
-	if response.Header.Get("Www-Authenticate") != "" {
-		// get the protocol info from the responses auth header
-		responseAuthHeader := response.Header.Get("Www-Authenticate")
-
-		if strings.Contains(responseAuthHeader, "Digest") {
-			// trim "Digest " from the beginning of the response string
-			cleanAuthHeader := strings.Trim(responseAuthHeader, "Digest ")
-
-			if strings.Contains(cleanAuthHeader, ", ") {
-				// split the response string into a slice
-				keyValuePairs := strings.Split(cleanAuthHeader, ", ")
-
-				if strings.Contains(keyValuePairs[0], "=") {
-
-					// split pair strings into keys and values and save them in auth[]
-					for _, pair := range keyValuePairs {
-						tuple := strings.Split(pair, "=")
-						key := tuple[0]
-						value := strings.Replace(tuple[1], "\"", "", -1) // this just strips tuple[1] from quotation marks
-						auth[key] = value
-					}
-				} else {
-					return auth, fmt.Errorf("\n%s, %s: Response header doesn't contain key=value pairs. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
-				}
-			} else {
-				return auth, fmt.Errorf("\n%s, %s: Response header doesn't contain enough info. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
-			}
-		} else {
-			return auth, fmt.Errorf("\n%s, %s: No digest info in response header. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
-		}
-	} else {
+	if response.Header.Get("Www-Authenticate") == "" {
 		return auth, fmt.Errorf("\n%s, %s: No \"Www-Authenticate\"-field in response header. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
+	}
+	// get the protocol info from the responses auth header
+	responseAuthHeader := response.Header.Get("Www-Authenticate")
+
+	if !strings.Contains(responseAuthHeader, "Digest") {
+		return auth, fmt.Errorf("\n%s, %s: No digest info in response header. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
+	}
+	// trim "Digest " from the beginning of the response string
+	cleanAuthHeader := strings.Trim(responseAuthHeader, "Digest ")
+
+	if !strings.Contains(cleanAuthHeader, ", ") {
+		return auth, fmt.Errorf("\n%s, %s: Response header doesn't contain enough info. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
+	}
+	// split the response string into a slice
+	keyValuePairs := strings.Split(cleanAuthHeader, ", ")
+
+	if !strings.Contains(keyValuePairs[0], "=") {
+		return auth, fmt.Errorf("\n%s, %s: Response header doesn't contain key=value pairs. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
+	}
+	// split pair strings into keys and values and save them in auth[]
+	for _, pair := range keyValuePairs {
+		tuple := strings.Split(pair, "=")
+		key := tuple[0]
+		value := strings.Replace(tuple[1], "\"", "", -1) // this just strips tuple[1] from quotation marks
+		auth[key] = value
 	}
 
 	return auth, nil
