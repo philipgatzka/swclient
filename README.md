@@ -4,50 +4,25 @@
 package main
 
 import (
-	"encoding/json"
-	"bytes"
 	"fmt"
 	"github.com/philipgatzka/swclient"
 	"github.com/philipgatzka/swclient/article"
 )
 
 func main() {
-	s, _ := swclient.New("user", "key", "https://shop.ware/api", "articles")
-	get(s)
-	put(s)
-}
-
-// example GET request
-func get(s swclient.Swclient) {
-	// execute request
-	response, _ := s.GetById(4)
-
-	// unmarshal received data into article model
-	artcl := article.Article{}
-	_ = json.Unmarshal(response, &artcl)
-
-	fmt.Println("inStock:", artcl.Data.MainDetail.InStock)
-}
-
-// example PUT request
-func put(s swclient.Swclient) {
-	// define changes
-	changeset := article.Data{
-		Name: "Newname",
-		MainDetail: &article.Detail{
-			InStock: 99,
-			Attribute: &article.Attribute{
-				Attr4: "Update",
-			},
-		},
+	// Get new swclient
+	s, err := swclient.New("user", "key", "https://shop.ware/api")
+	if err != nil {
+		// handle
 	}
-	// marshal into json
-	b, _ := json.Marshal(changeset)
-
-	// execute request
-	response, _ := s.PutById(4, bytes.NewReader(b))
-
-	// maybe inspect returned data
-	fmt.Println(string(response))
+	// The type of this struct determines the api resource which will be called
+	artcl := article.Article{}
+	// "2" is the id of the article we want to get, all returned data will be unmarshaled into artcl
+	err = s.GetSingle("2", &artcl)
+	if err != nil {
+		// handle
+	}
+	// All fields of the "articles" resource are now set and accessible (except those that were null, 0, [], {} or "")
+	fmt.Println(artcl.Name, artcl.DescriptionLong, artcl.MainDetail.Attribute.Attr3)
 }
 ```
