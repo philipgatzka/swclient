@@ -7,18 +7,26 @@ import (
 	"testing"
 )
 
-// mockHasher is a struct for testing the hashing functions
+/*
+	mockHasher is a struct for testing the hashing functions
+*/
 type mockHasher struct{}
 
-// Reset is required by hasher interface
+/*
+	Reset is required by hasher interface
+*/
 func (mockHasher) Reset() {}
 
-// Write is reduired by hasher interface
+/*
+	Write is reduired by hasher interface
+*/
 func (mockHasher) Write(b []byte) (int, error) {
 	return 0, nil
 }
 
-// Sum is required by hasher interface
+/*
+	Sum is required by hasher interface
+*/
 func (mockHasher) Sum(b []byte) []byte {
 	return []byte("hello, this is mockHasher!")
 }
