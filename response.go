@@ -6,4 +6,5 @@ import "encoding/json"
 type Response struct {
 	Data    json.RawMessage
 	Success bool
+	Total   int
 }

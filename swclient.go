@@ -16,10 +16,10 @@ import (
 
 // Swclient defines the interface this library exposes
 type Swclient interface {
-	GetSingle(id string, o interface{}) error
-	GetSingleRaw(resource string, id string) (*Response, error)
-	PutSingle(id string, o interface{}) (*Response, error)
-	PutSingleRaw(resource string, id string, body io.Reader) (*Response, error)
+	Get(id string, o interface{}) error
+	GetRaw(resource string, id string) (*Response, error)
+	Put(id string, o interface{}) (*Response, error)
+	PutRaw(resource string, id string, body io.Reader) (*Response, error)
 }
 
 // swclient holds client and server information
@@ -56,17 +56,17 @@ var resources = map[string]string{
 	"*shop.Shop":                   "shops",
 	"*translation.Translation":     "translations",
 	"*variant.Variant":             "variants",
-	"*[]address.Address":           "addresses",
-	"*[]article.Article":           "articles",
-	"*[]cache.Cache":               "caches",
-	"*[]category.Category":         "categories",
-	"*[]country.Country":           "countries",
-	"*[]customer.Customer":         "customers",
-	"*[]manufacturer.Manufacturer": "manufacturers",
-	"*[]media.Media":               "media",
-	"*[]order.Order":               "orders",
-	"*[]shop.Shop":                 "shops",
-	"*[]translation.Translation":   "translations",
+	"*[]address.Address":           "addresses?limit=9999",
+	"*[]article.Article":           "articles?limit=9999",
+	"*[]cache.Cache":               "caches?limit=9999",
+	"*[]category.Category":         "categories?limit=9999",
+	"*[]country.Country":           "countries?limit=9999",
+	"*[]customer.Customer":         "customers?limit=9999",
+	"*[]manufacturer.Manufacturer": "manufacturers?limit=9999",
+	"*[]media.Media":               "media?limit=9999",
+	"*[]order.Order":               "orders?limit=9999",
+	"*[]shop.Shop":                 "shops?limit=9999",
+	"*[]translation.Translation":   "translations?limit=9999",
 }
 
 // New returns an initialised swclient
@@ -104,9 +104,9 @@ func New(user string, key string, apiurl string) (Swclient, error) {
 }
 
 // GetSingle
-func (s swclient) GetSingle(id string, o interface{}) error {
+func (s swclient) Get(id string, o interface{}) error {
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
-		resp, err := s.GetSingleRaw(res, id)
+		resp, err := s.GetRaw(res, id)
 		if err != nil {
 			return swerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
@@ -122,12 +122,12 @@ func (s swclient) GetSingle(id string, o interface{}) error {
 }
 
 // GetSingleRaw
-func (s swclient) GetSingleRaw(resource string, id string) (*Response, error) {
+func (s swclient) GetRaw(resource string, id string) (*Response, error) {
 	return s.request("GET", resource, id, bytes.NewBufferString(""))
 }
 
 // PutSingle
-func (s swclient) PutSingle(id string, o interface{}) (*Response, error) {
+func (s swclient) Put(id string, o interface{}) (*Response, error) {
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
@@ -140,7 +140,7 @@ func (s swclient) PutSingle(id string, o interface{}) (*Response, error) {
 }
 
 // PutSingleRaw
-func (s swclient) PutSingleRaw(resource string, id string, body io.Reader) (*Response, error) {
+func (s swclient) PutRaw(resource string, id string, body io.Reader) (*Response, error) {
 	return s.request("PUT", resource, id, body)
 }
 
