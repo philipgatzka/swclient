@@ -43,6 +43,8 @@ func (s swerror) Error() string {
 	return fmt.Sprintf("\n%s, %s: %s", s.file, s.function, s.message)
 }
 
+// struct -> api-resource/endpoint mappings
+// TODO: get rid of the hardcoded limit
 var resources = map[string]string{
 	"*address.Address":             "addresses",
 	"*article.Article":             "articles",
@@ -56,17 +58,17 @@ var resources = map[string]string{
 	"*shop.Shop":                   "shops",
 	"*translation.Translation":     "translations",
 	"*variant.Variant":             "variants",
-	"*[]address.Address":           "addresses?limit=9999",
-	"*[]article.Article":           "articles?limit=9999",
-	"*[]cache.Cache":               "caches?limit=9999",
-	"*[]category.Category":         "categories?limit=9999",
-	"*[]country.Country":           "countries?limit=9999",
-	"*[]customer.Customer":         "customers?limit=9999",
-	"*[]manufacturer.Manufacturer": "manufacturers?limit=9999",
-	"*[]media.Media":               "media?limit=9999",
-	"*[]order.Order":               "orders?limit=9999",
-	"*[]shop.Shop":                 "shops?limit=9999",
-	"*[]translation.Translation":   "translations?limit=9999",
+	"*[]address.Address":           "addresses?limit=999999",
+	"*[]article.Article":           "articles?limit=999999",
+	"*[]cache.Cache":               "caches?limit=999999",
+	"*[]category.Category":         "categories?limit=999999",
+	"*[]country.Country":           "countries?limit=999999",
+	"*[]customer.Customer":         "customers?limit=999999",
+	"*[]manufacturer.Manufacturer": "manufacturers?limit=999999",
+	"*[]media.Media":               "media?limit=999999",
+	"*[]order.Order":               "orders?limit=999999",
+	"*[]shop.Shop":                 "shops?limit=999999",
+	"*[]translation.Translation":   "translations?limit=999999",
 }
 
 // New returns an initialised swclient
@@ -103,8 +105,43 @@ func New(user string, key string, apiurl string) (Swclient, error) {
 	}, nil
 }
 
-// GetSingle
+// Get fetches a resource or multiple resources from a shop
+// Resource selection is done by passing a pointer to a struct of one of the following types:
+//
+// 	address.Address
+// 	article.Article
+// 	cache.Cache
+// 	category.Category
+// 	country.Country
+// 	customer.Customer
+// 	manufacturer.Manufacturer
+// 	media.Media
+// 	order.Order
+// 	shop.Shop
+// 	translation.Translation
+// 	variant.Variant
+// 	[]address.Address
+// 	[]article.Article
+// 	[]cache.Cache
+// 	[]category.Category
+// 	[]country.Country
+// 	[]customer.Customer
+// 	[]manufacturer.Manufacturer
+// 	[]media.Media
+// 	[]order.Order
+// 	[]shop.Shop
+// 	[]translation.Translation
+//
+// Data returned from the shop is unmarshaled into the passed struct
+//
+// Examples:
+//	a := article.Article{}
+//	s.Get("4", &a)	// single
+//
+//	b := []article.Article{}
+//	s.Get("", &b)	// list
 func (s swclient) Get(id string, o interface{}) error {
+	// FIXME: 	This check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		resp, err := s.GetRaw(res, id)
 		if err != nil {
@@ -121,13 +158,56 @@ func (s swclient) Get(id string, o interface{}) error {
 	return nil
 }
 
-// GetSingleRaw
+// GetRaw fetches a resource or multiple resources from a shop
+// Examples:
+// 	s.GetRaw("articles", "6")	// single
+//	s.GetRaw("articles", "")	// list
 func (s swclient) GetRaw(resource string, id string) (*Response, error) {
 	return s.request("GET", resource, id, bytes.NewBufferString(""))
 }
 
-// PutSingle
+// Put uploads the passed resource to a shop
+// Resource selection is done by passing a pointer to a struct of one of the following types:
+//
+// 	address.Address
+// 	article.Article
+// 	cache.Cache
+// 	category.Category
+// 	country.Country
+// 	customer.Customer
+// 	manufacturer.Manufacturer
+// 	media.Media
+// 	order.Order
+// 	shop.Shop
+// 	translation.Translation
+// 	variant.Variant
+// 	[]address.Address
+// 	[]article.Article
+// 	[]cache.Cache
+// 	[]category.Category
+// 	[]country.Country
+// 	[]customer.Customer
+// 	[]manufacturer.Manufacturer
+// 	[]media.Media
+// 	[]order.Order
+// 	[]shop.Shop
+// 	[]translation.Translation
+//
+// Example:
+//	a := article.Article{
+//		Name: "New name"
+//		MainDetail: &article.Detail{
+//			InStock: 78,
+//			Prices: []article.Price{
+//				{
+//					Price: 123.456,
+//				},
+//			},
+//		},
+//	}
+//	s.Put("4", &a)	// single
 func (s swclient) Put(id string, o interface{}) (*Response, error) {
+	// FIXME: This map check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
@@ -139,7 +219,9 @@ func (s swclient) Put(id string, o interface{}) (*Response, error) {
 	}
 }
 
-// PutSingleRaw
+// PutRaw uploads the passed io.Reader to a shop
+// Example:
+//	resp, err := s.PutRaw("articles", "6", bytes.NewBufferString("{Name:"New name"}"))
 func (s swclient) PutRaw(resource string, id string, body io.Reader) (*Response, error) {
 	return s.request("PUT", resource, id, body)
 }
