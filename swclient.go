@@ -14,9 +14,7 @@ import (
 	"reflect"
 )
 
-/*
-	Swclient defines the interface this library exposes
-*/
+// Swclient defines the interface this library exposes.
 type Swclient interface {
 	Get(id string, o interface{}) error
 	GetRaw(resource string, id string) (*Response, error)
@@ -24,9 +22,7 @@ type Swclient interface {
 	PutRaw(resource string, id string, body io.Reader) (*Response, error)
 }
 
-/*
-	swclient holds client and server information
-*/
+// swclient holds client and server information.
 type swclient struct {
 	user    string
 	key     string
@@ -36,9 +32,7 @@ type swclient struct {
 	hshr    hash.Hash
 }
 
-/*
-	swerror provides better error messages
-*/
+// swerror provides better error messages.
 type swerror struct {
 	file     string
 	function string
@@ -49,10 +43,8 @@ func (s swerror) Error() string {
 	return fmt.Sprintf("\n%s, %s: %s", s.file, s.function, s.message)
 }
 
-/*
-	struct -> api-resource/endpoint mappings
-	TODO: get rid of the hardcoded limit
-*/
+// resources maps typenames to Shopware API-resources/endpoints.
+// TODO: get rid of the hardcoded limit
 var resources = map[string]string{
 	"*address.Address":             "addresses",
 	"*article.Article":             "articles",
@@ -79,9 +71,7 @@ var resources = map[string]string{
 	"*[]translation.Translation":   "translations?limit=999999",
 }
 
-/*
-	New returns an initialised swclient
-*/
+// New returns an initialised swclient.
 func New(user string, key string, apiurl string) (Swclient, error) {
 	// check input
 	if len(user) <= 0 {
@@ -115,42 +105,14 @@ func New(user string, key string, apiurl string) (Swclient, error) {
 	}, nil
 }
 
-/*
-	Get fetches a resource or multiple resources from a shop
-
-	Resource selection is done by passing a pointer to a struct of one of the following types:
-		address.Address
-		article.Article
-		cache.Cache
-		category.Category
-		country.Country
-		customer.Customer
-		manufacturer.Manufacturer
-		media.Media
-		order.Order
-		shop.Shop
-		translation.Translation
-		variant.Variant
-		[]address.Address
-		[]article.Article
-		[]cache.Cache
-		[]category.Category
-		[]country.Country
-		[]customer.Customer
-		[]manufacturer.Manufacturer
-		[]media.Media
-		[]order.Order
-		[]shop.Shop
-		[]translation.Translation
-
-	Data returned from the shop is unmarshaled into the passed struct
-
-	Examples:
-		a := article.Article{}
-		s.Get("4", &a)	// single
-		b := []article.Article{}
-		s.Get("", &b)	// list
-*/
+// Get fetches a resource or multiple resources from a shop.
+// Resource selection is done by passing a pointer to a struct of one of the types present in swclient.resources.
+// Data returned from the shop is unmarshaled into the passed struct.
+// Examples:
+// 	a := article.Article{}
+// 	s.Get("4", &a)	// single
+// 	b := []article.Article{}
+// 	s.Get("", &b)	// list
 func (s swclient) Get(id string, o interface{}) error {
 	// BUG(philipgatzka): This check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
@@ -169,59 +131,29 @@ func (s swclient) Get(id string, o interface{}) error {
 	return nil
 }
 
-/*
-	GetRaw fetches a resource or multiple resources from a shop
-
-	Examples:
-		s.GetRaw("articles", "6")	// single
-		s.GetRaw("articles", "")	// list
-*/
+// GetRaw fetches a resource or multiple resources from a shop.
+// Examples:
+//	s.GetRaw("articles", "6")	// single
+//	s.GetRaw("articles", "")	// list
 func (s swclient) GetRaw(resource string, id string) (*Response, error) {
 	return s.request("GET", resource, id, bytes.NewBufferString(""))
 }
 
-/*
-	Put uploads the passed resource to a shop
-
- 	Resource selection is done by passing a pointer to a struct of one of the following types:
- 		address.Address
- 		article.Article
- 		cache.Cache
- 		category.Category
- 		country.Country
- 		customer.Customer
- 		manufacturer.Manufacturer
- 		media.Media
- 		order.Order
- 		shop.Shop
- 		translation.Translation
- 		variant.Variant
- 		[]address.Address
- 		[]article.Article
- 		[]cache.Cache
- 		[]category.Category
- 		[]country.Country
- 		[]customer.Customer
- 		[]manufacturer.Manufacturer
- 		[]media.Media
- 		[]order.Order
- 		[]shop.Shop
- 		[]translation.Translation
-
-	 Example:
-		a := article.Article{
-			Name: "New name"
-			MainDetail: &article.Detail{
-				InStock: 78,
-				Prices: []article.Price{
-					{
-						Price: 123.456,
-					},
-				},
-			},
-		}
-		s.Put("4", &a)	// single
-*/
+// Put updates a shop resource.
+// Resource selection is done by passing a pointer to a struct of one of the types present in swclient.resources.
+// Example:
+// 	a := article.Article{
+// 		Name: "New name"
+// 		MainDetail: &article.Detail{
+// 			InStock: 78,
+// 			Prices: []article.Price{
+// 				{
+// 					Price: 123.456,
+// 				},
+// 			},
+// 		},
+// 	}
+// 	s.Put("4", &a)	// single
 func (s swclient) Put(id string, o interface{}) (*Response, error) {
 	// BUG(philipgatzka): This check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
@@ -235,21 +167,16 @@ func (s swclient) Put(id string, o interface{}) (*Response, error) {
 	}
 }
 
-/*
-	PutRaw uploads the passed io.Reader to a shop
-
-	Example:
-		resp, err := s.PutRaw("articles", "6", bytes.NewBufferString("{Name:"New name"}"))
-*/
+// PutRaw updates a shop resource.
+// Example:
+//	resp, err := s.PutRaw("articles", "6", bytes.NewBufferString("{Name:"New name"}"))
 func (s swclient) PutRaw(resource string, id string, body io.Reader) (*Response, error) {
 	return s.request("PUT", resource, id, body)
 }
 
-/*
-	request executes an http-request of the given method
-*/
+// request executes an http-request.
 func (s *swclient) request(method string, resource string, id string, body io.Reader) (*Response, error) {
-	// join shopware base-url, api-endpoint, resource and id
+	// join base-url, resource and id
 	s.baseurl.Path = path.Join(s.apiurl, resource, id)
 
 	// execute

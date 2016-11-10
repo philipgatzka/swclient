@@ -3,14 +3,13 @@ package swclient
 import (
 	"fmt"
 	"io"
+	"math/rand"
 	"net/http"
+	"strconv"
 	"strings"
-	"time"
 )
 
-/*
-	digest holds all information required for digest-authentication
-*/
+// digest holds all information required for digest-authentication.
 type digest struct {
 	realm     string
 	qop       string
@@ -27,10 +26,7 @@ type digest struct {
 	key       string
 }
 
-/*
-	generateRequest uses the provided information to generate a new http.Request
-	which has all the necessary information for digest-authentication
-*/
+// generateRequest generates a new http.Request which carries all necessary authentication information.
 func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, hshr hasher) (*http.Request, error) {
 	// if serverinfo is given
 	if serverinfo != nil {
@@ -71,14 +67,12 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 	return request, nil
 }
 
-/*
-	calculateResponse calculates the response string the server requires
-*/
+// calculateResponse calculates the response string the server expects.
 func (d *digest) calculateResponse(method string, uri string, username string, key string, hshr hasher) (string, error) {
 	// increment request count
 	d.nC += 0x1
 	// calculate new cNonce
-	cNonce, err := hashNow(hshr)
+	cNonce, err := hashRand(hshr)
 	if err != nil {
 		return "", swerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
@@ -112,9 +106,7 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 	return response, nil
 }
 
-/*
-	parseParameters gets the values for realm, nOnce, opaque, algorithm and qop from a response header
-*/
+// parseParameters gets the values for realm, nOnce, opaque, algorithm and qop from a HTTP response header.
 func parseParameters(response *http.Response) (map[string]string, error) {
 	// auth will hold the all data that was supplied by the response string
 	auth := map[string]string{}
@@ -151,9 +143,7 @@ func parseParameters(response *http.Response) (map[string]string, error) {
 	return auth, nil
 }
 
-/*
-	hashWithColon takes a slice of string, joins its parts into a single string with colons and hashes that
-*/
+// hashWithColon takes a slice of strings, joins them into a single string separated with colons and hashes that.
 func hashWithColon(hshr hasher, parts ...string) (string, error) {
 	hashed, err := hashString(joinWithColon(parts...), hshr)
 	if err != nil {
@@ -162,9 +152,7 @@ func hashWithColon(hshr hasher, parts ...string) (string, error) {
 	return hashed, nil
 }
 
-/*
-	hash returns the md5 hash of the supplied string
-*/
+// hash returns the hash of the string passed to it.
 func hashString(str string, hshr hasher) (string, error) {
 	// reset hasher because it could have been used before
 	hshr.Reset()
@@ -173,19 +161,16 @@ func hashString(str string, hshr hasher) (string, error) {
 	if err != nil {
 		return "", swerror{"swclient/digest.go", "hashString()", err.Error()}
 	}
-	return fmt.Sprintf("%x", hshr.Sum(nil)), nil // %x -> base 16
+	// TODO: (crypto/md5/example_test): its possible to call Sum([]byte(str)) directly and omit hshr.Write() and hshr.Reset() and all the hasher dependencies...
+	return fmt.Sprintf("%x", hshr.Sum(nil)), nil // %x -> hexadecimal
 }
 
-/*
-	hashNow returns the hashed system time at the time of execution
-*/
-func hashNow(hshr hasher) (string, error) {
-	return hashString(time.Now().String(), hshr)
+// hashRand returns a hashed pseudo-random int.
+func hashRand(hshr hasher) (string, error) {
+	return hashString(strconv.Itoa(rand.Int()), hshr)
 }
 
-/*
-	joinWithColon joins a slice of strings into one string separated with colons
-*/
+// joinWithColon joins a slice of strings into one string separated with colons.
 func joinWithColon(str ...string) string {
 	return strings.Join(str, ":")
 }
