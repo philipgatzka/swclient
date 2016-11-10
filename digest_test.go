@@ -3,6 +3,7 @@ package swclient
 import (
 	"bytes"
 	"crypto/md5"
+	"fmt"
 	"net/http"
 	"testing"
 )
@@ -13,7 +14,7 @@ type mockHasher struct{}
 // Reset is required by hasher interface.
 func (mockHasher) Reset() {}
 
-// Write is reduired by hasher interface.
+// Write is required by hasher interface.
 func (mockHasher) Write(b []byte) (int, error) {
 	return 0, nil
 }
@@ -39,26 +40,48 @@ var mockDigest = digest{
 	key:       "test",
 }
 
+var mockUsername = "test"
+var mockRealm = "test"
+var mockNonce = "test"
+var mockUri = "test"
+var mockCnonce = "68656c6c6f2c2074686973206973206d6f636b48617368657221"
+var mockNc = "00000002"
+var mockResponse = "68656c6c6f2c2074686973206973206d6f636b48617368657221"
+
+var mockData = map[string]string{
+	"username": mockUsername,
+	"realm":    mockRealm,
+	"nonce":    mockNonce,
+	"uri":      mockUri,
+	"cnonce":   mockCnonce,
+	"nc":       mockNc,
+	"response": mockResponse,
+}
+
+var mockResponseHeader = fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", cnonce="%s", nc=%s, qop=, response="%s"`, mockUsername, mockRealm, mockNonce, mockUri, mockCnonce, mockNc, mockResponse)
+
+var mockServerResponse = &http.Response{
+	Header: map[string][]string{
+		"Www-Authenticate": []string{
+			mockResponseHeader,
+		},
+	},
+}
+
 func TestDigestGenerateRequest(t *testing.T) {
 	d := mockDigest
-	authHeader := `Digest username="test", realm="test", nonce="test", uri="test", cnonce="68656c6c6f2c2074686973206973206d6f636b48617368657221", nc=00000002, qop=, response="68656c6c6f2c2074686973206973206d6f636b48617368657221"`
 
-	testHeader := map[string][]string{}
-	testHeader["Www-Authenticate"] = []string{authHeader}
-	serverinfo := &http.Response{Header: testHeader}
-
-	body := bytes.NewBufferString("test")
-
-	expected, err := http.NewRequest(d.method, d.path, body)
+	// define what is expected
+	expected, err := http.NewRequest(d.method, d.path, bytes.NewBufferString("test"))
 	if err != nil {
 		t.Error(err)
 	}
-
-	expected.Header.Set("Authorization", authHeader)
+	expected.Header.Set("Authorization", mockResponseHeader)
 	expected.Header.Set("Host", expected.Host)
 	expected.Header.Set("Content-Type", "application/json; charset=utf-8")
 
-	got, err := d.generateRequest(d.method, d.path, body, d.name, d.key, serverinfo, mockHasher{})
+	// see what is returned
+	got, err := d.generateRequest(d.method, d.path, bytes.NewBufferString("test"), d.name, d.key, mockServerResponse, mockHasher{})
 	if err != nil {
 		t.Error(err)
 	}
@@ -77,49 +100,26 @@ func TestDigestGenerateRequest(t *testing.T) {
 }
 
 func TestDigestCalculateResponse(t *testing.T) {
-	d := mockDigest
-	expected := "68656c6c6f2c2074686973206973206d6f636b48617368657221"
-
-	got, err := d.calculateResponse("GET", "http://hello.this/is/test", "user", "key", mockHasher{})
+	got, err := mockDigest.calculateResponse("GET", "http://hello.this/is/irrelevant", "someUser", "someKey", mockHasher{})
 	if err != nil {
 		t.Error(err)
 	}
 
-	if got != expected {
-		t.Error("got", got, "expected", expected)
+	if got != mockResponse {
+		t.Error("got", got, "expected", mockResponse)
 	}
 }
 
 func TestDigestParseParameters(t *testing.T) {
-	testAuthHeader := `Digest username="user", realm="realm", nonce="nonce", uri="http://testing.org", response="response", opaque="opaque", qop=auth, nc=00000001, cnonce="cnonce", algorithm="md5"`
+	tuples, err := parseParameters(mockServerResponse)
+	if err != nil {
+		t.Error(err)
+		t.FailNow()
+	}
 
-	testHeader := map[string][]string{}
-	testHeader["Www-Authenticate"] = []string{testAuthHeader}
-	testResponse := &http.Response{Header: testHeader}
-
-	cases := []*http.Response{testResponse}
-
-	for _, c := range cases {
-		tuples, err := parseParameters(c)
-		if err != nil {
-			t.Error(err)
-			t.FailNow()
-		}
-
-		if tuples["realm"] == "" {
-			t.Error("realm is empty")
-		}
-		if tuples["qop"] == "" {
-			t.Error("qop is empty")
-		}
-		if tuples["nonce"] == "" {
-			t.Error("nOnce is empty")
-		}
-		if tuples["opaque"] == "" {
-			t.Error("opaque is empty")
-		}
-		if tuples["algorithm"] == "" {
-			t.Error("algorithm is empty")
+	for key, val := range tuples {
+		if val != mockData[key] {
+			t.Error("expected", mockData[key], "got", val)
 		}
 	}
 }
@@ -139,8 +139,8 @@ func TestDigestHashWithColon(t *testing.T) {
 
 func TestDigestJoinWithColon(t *testing.T) {
 	expected := "hello:this:is:test"
-	got := joinWithColon("hello", "this", "is", "test")
 
+	got := joinWithColon("hello", "this", "is", "test")
 	if got != expected {
 		t.Error("expected", expected, "got", got)
 	}

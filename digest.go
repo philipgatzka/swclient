@@ -111,7 +111,7 @@ func parseParameters(response *http.Response) (map[string]string, error) {
 	// auth will hold the all data that was supplied by the response string
 	auth := map[string]string{}
 
-	if response.Header.Get("Www-Authenticate") == "" {
+	if len(response.Header.Get("Www-Authenticate")) <= 0 {
 		return auth, fmt.Errorf("\n%s, %s: No \"Www-Authenticate\"-field in response header. %s: \"%s\"", "swclient/digest.go", "parseParameters()", response.Status, response.Request.RequestURI)
 	}
 	// get the protocol info from the responses auth header
