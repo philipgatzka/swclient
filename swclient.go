@@ -32,19 +32,19 @@ type swclient struct {
 	hshr    hash.Hash
 }
 
-// swerror provides better error messages.
-type swerror struct {
+// cerror provides custom error messages.
+type cerror struct {
 	file     string
 	function string
 	message  string
 }
 
-func (s swerror) Error() string {
+func (s cerror) Error() string {
 	return fmt.Sprintf("\n%s, %s: %s", s.file, s.function, s.message)
 }
 
 // resources maps typenames to Shopware API-resources/endpoints.
-// TODO: get rid of the hardcoded limit
+// TODO: get rid of hardcoded limit
 var resources = map[string]string{
 	"*address.Address":             "addresses",
 	"*article.Article":             "articles",
@@ -75,20 +75,20 @@ var resources = map[string]string{
 func New(user string, key string, apiurl string) (Swclient, error) {
 	// check input
 	if len(user) <= 0 {
-		return nil, swerror{"swclient/swclient.go", "New()", "Can't create swclient: user not specified"}
+		return nil, cerror{"swclient/swclient.go", "New()", "Can't create swclient: user not specified"}
 	}
 
 	if len(key) <= 0 {
-		return nil, swerror{"swclient/swclient.go", "New()", "Can't create swclient: key not specified"}
+		return nil, cerror{"swclient/swclient.go", "New()", "Can't create swclient: key not specified"}
 	}
 
 	if len(apiurl) <= 0 {
-		return nil, swerror{"swclient/swclient.go", "New()", "Can't create swclient: api-url not specified"}
+		return nil, cerror{"swclient/swclient.go", "New()", "Can't create swclient: api-url not specified"}
 	}
 
 	u, err := url.Parse(apiurl)
 	if err != nil {
-		return nil, swerror{"swclient/swclient.go", "New()", err.Error()}
+		return nil, cerror{"swclient/swclient.go", "New()", err.Error()}
 	}
 
 	// initialise and return
@@ -118,15 +118,15 @@ func (s swclient) Get(id string, o interface{}) error {
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		resp, err := s.GetRaw(res, id)
 		if err != nil {
-			return swerror{"swclient/swclient.go", "GetSingle()", err.Error()}
+			return cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
 
 		err = json.Unmarshal(resp.Data, o)
 		if err != nil {
-			return swerror{"swclient/swclient.go", "GetSingle()", err.Error()}
+			return cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
 	} else {
-		return swerror{"swclient/swclient.go", "GetSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
+		return cerror{"swclient/swclient.go", "GetSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 	}
 	return nil
 }
@@ -159,11 +159,11 @@ func (s swclient) Put(id string, o interface{}) (*Response, error) {
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
-			return nil, swerror{"swclient/swclient.go", "GetSingle()", err.Error()}
+			return nil, cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
 		return s.request("PUT", res, id, bytes.NewReader(bts))
 	} else {
-		return nil, swerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
+		return nil, cerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 	}
 }
 
@@ -182,16 +182,16 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	// execute
 	resp, err := s.dgc.request(method, s.baseurl.String(), body, s.user, s.key, s.hshr)
 	if err != nil {
-		return nil, swerror{"swclient/swclient.go", "request()", err.Error()}
+		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, swerror{"swclient/swclient.go", "request()", resp.Status}
+		return nil, cerror{"swclient/swclient.go", "request()", resp.Status}
 	}
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, swerror{"swclient/swclient.go", "request()", err.Error()}
+		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 	resp.Body.Close()
 
@@ -199,7 +199,7 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	data := Response{}
 	err = json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, swerror{"swclient/swclient.go", "request()", err.Error()}
+		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 
 	return &data, nil

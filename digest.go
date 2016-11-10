@@ -33,7 +33,7 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 		// parse server info
 		auth, err := parseParameters(serverinfo)
 		if err != nil {
-			return nil, swerror{"swclient/digest.go", "generateRequest()", err.Error()}
+			return nil, cerror{"swclient/digest.go", "generateRequest()", err.Error()}
 		}
 		d.realm = auth["realm"]
 		d.nOnce = auth["nonce"]
@@ -44,7 +44,7 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 	// calculate response to server challenge
 	response, err := d.calculateResponse(method, uri, username, key, hshr)
 	if err != nil {
-		return nil, swerror{"swclient/digest.go", "generateRequest()", err.Error()}
+		return nil, cerror{"swclient/digest.go", "generateRequest()", err.Error()}
 	}
 	// construct the digest header string
 	authHeader := fmt.Sprintf(
@@ -57,7 +57,7 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 	// generate standard request
 	request, err := http.NewRequest(method, uri, body)
 	if err != nil {
-		return nil, swerror{"swclient/digest.go", "generateRequest()", err.Error()}
+		return nil, cerror{"swclient/digest.go", "generateRequest()", err.Error()}
 	}
 	// set the authorization, host and content-type headers
 	request.Header.Set("Authorization", authHeader)
@@ -74,7 +74,7 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 	// calculate new cNonce
 	cNonce, err := hashRand(hshr)
 	if err != nil {
-		return "", swerror{"swclient/digest.go", "calculateResponse()", err.Error()}
+		return "", cerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
 	d.cNonce = cNonce
 	// set method
@@ -87,21 +87,21 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 	// calculate aOne
 	aOne, err := hashWithColon(hshr, d.name, d.realm, d.key)
 	if err != nil {
-		return "", swerror{"swclient/digest.go", "calculateResponse()", err.Error()}
+		return "", cerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
 	// set aOne
 	d.aOne = aOne
 	// calculate aOne
 	aTwo, err := hashWithColon(hshr, d.method, d.path)
 	if err != nil {
-		return "", swerror{"swclient/digest.go", "calculateResponse()", err.Error()}
+		return "", cerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
 	// set aTwo
 	d.aTwo = aTwo
 	// calculate response
 	response, err := hashWithColon(hshr, d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
 	if err != nil {
-		return "", swerror{"swclient/digest.go", "calculateResponse()", err.Error()}
+		return "", cerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
 	return response, nil
 }
@@ -147,7 +147,7 @@ func parseParameters(response *http.Response) (map[string]string, error) {
 func hashWithColon(hshr hasher, parts ...string) (string, error) {
 	hashed, err := hashString(joinWithColon(parts...), hshr)
 	if err != nil {
-		return "", swerror{"swclient/digest.go", "hashWithColon()", err.Error()}
+		return "", cerror{"swclient/digest.go", "hashWithColon()", err.Error()}
 	}
 	return hashed, nil
 }
@@ -159,7 +159,7 @@ func hashString(str string, hshr hasher) (string, error) {
 
 	_, err := hshr.Write([]byte(str))
 	if err != nil {
-		return "", swerror{"swclient/digest.go", "hashString()", err.Error()}
+		return "", cerror{"swclient/digest.go", "hashString()", err.Error()}
 	}
 	// TODO: (crypto/md5/example_test): its possible to call Sum([]byte(str)) directly and omit hshr.Write() and hshr.Reset() and all the hasher dependencies...
 	return fmt.Sprintf("%x", hshr.Sum(nil)), nil // %x -> hexadecimal
