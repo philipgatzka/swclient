@@ -27,12 +27,14 @@ func TestRequest(t *testing.T) {
 		httpc: &http.Client{},
 	}
 
-	_, err = dgst.request("GET", ts.URL, bytes.NewBufferString(""), "user", "key", md5.New())
+	hshr := md5.New()
+
+	_, err = dgst.request("GET", ts.URL, bytes.NewBufferString(""), "user", "key", hshr)
 	if err != nil {
 		t.Error(err)
 	}
 
-	resp, err := dgst.request("GET", ts.URL, bytes.NewBufferString(""), "user", "key", md5.New())
+	resp, err := dgst.request("GET", ts.URL, bytes.NewBufferString(""), "user", "key", hshr)
 	if err != nil {
 		t.Error(err)
 	}
