@@ -34,7 +34,6 @@ func (d *digestclient) request(method string, uri string, body io.Reader, userna
 		}
 		return d.exec(req)
 	}
-
 }
 
 // exec takes an *http.Request and executes it.
