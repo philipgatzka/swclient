@@ -36,7 +36,7 @@ type Article struct {
 	ConfiguratorSet   *ConfiguratorSet    `json:",omitempty"`
 	Links             []Link              `json:",omitempty"`
 	Downloads         []Download          `json:",omitempty"`
-	Categories        map[int]Category    `json:",omitempty"`
+	Categories        []Category          `json:",omitempty"`
 	Similar           *[]Similar          `json:",omitempty"`
 	Related           *[]Related          `json:",omitempty"`
 	Details           *[]Detail           `json:",omitempty"`

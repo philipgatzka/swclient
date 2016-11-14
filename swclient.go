@@ -20,9 +20,9 @@ type Swclient interface {
 	GetRaw(resource string, id string) (*Response, error)
 	Put(id string, o interface{}) (*Response, error)
 	PutRaw(resource string, id string, body io.Reader) (*Response, error)
-	Post(id string, o interface{}) (*Response, error)
-	PostRaw(resource string, id string, body io.Reader) (*Response, error)
-	Delete(resource string, id string) (*Response, error)
+	Post(o interface{}) (*Response, error)
+	PostRaw(resource string, body io.Reader) (*Response, error)
+	Delete(resource string, id ...string) (*Response, error)
 }
 
 // swclient holds client and server information.
@@ -192,14 +192,14 @@ func (s swclient) PutRaw(resource string, id string, body io.Reader) (*Response,
 // 		},
 // 	}
 // 	s.Post("4", &a)	// single
-func (s swclient) Post(id string, o interface{}) (*Response, error) {
+func (s swclient) Post(o interface{}) (*Response, error) {
 	// BUG(philipgatzka): This check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
 			return nil, cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
-		return s.PostRaw(res, id, bytes.NewReader(bts))
+		return s.PostRaw(res, bytes.NewReader(bts))
 	} else {
 		return nil, cerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 	}
@@ -207,16 +207,23 @@ func (s swclient) Post(id string, o interface{}) (*Response, error) {
 
 // PostRaw updates a shop resource.
 // Example:
-//	resp, err := s.PostRaw("articles", "6", bytes.NewBufferString("{Name:"The name"}"))
-func (s swclient) PostRaw(resource string, id string, body io.Reader) (*Response, error) {
-	return s.request("POST", resource, id, body)
+//	resp, err := s.PostRaw("articles", bytes.NewBufferString("{Name:"The name"}"))
+func (s swclient) PostRaw(resource string, body io.Reader) (*Response, error) {
+	return s.request("POST", resource, "", body)
 }
 
-// Delete deletes a shop resource.
+// Delete one or more shop resources.
 // Example:
 //	resp, err := s.Delete("articles", "6")
-func (s swclient) Delete(resource string, id string) (*Response, error) {
-	return s.request("DELETE", resource, id, bytes.NewBufferString(""))
+func (s swclient) Delete(resource string, id ...string) (*Response, error) {
+	if len(id) > 1 {
+		bts, err := json.Marshal(id)
+		if err != nil {
+			return nil, cerror{"swylient/swclient.go", "Delete()", err.Error()}
+		}
+		return s.request("DELETE", resource, "", bytes.NewReader(bts))
+	}
+	return s.request("DELETE", resource, id[0], bytes.NewBufferString(""))
 }
 
 // request executes an http-request.
@@ -231,7 +238,12 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	}
 
 	if resp.StatusCode != 200 {
-		return nil, cerror{"swclient/swclient.go", "request()", resp.Status}
+		bts, err := ioutil.ReadAll(resp.Request.Body)
+		if err != nil {
+			return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
+		}
+		ret := fmt.Sprint(resp.Status, resp.Request, string(bts))
+		return nil, cerror{"swclient/swclient.go", "request()", ret}
 	}
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
