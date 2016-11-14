@@ -49,18 +49,19 @@ func (s cerror) Error() string {
 // resources maps typenames to Shopware API-resources/endpoints.
 // TODO: get rid of hardcoded limit
 var resources = map[string]string{
-	"*address.Address":             "addresses",
-	"*article.Article":             "articles",
-	"*cache.Cache":                 "caches",
-	"*category.Category":           "categories",
-	"*country.Country":             "countries",
-	"*customer.Customer":           "customers",
-	"*manufacturer.Manufacturer":   "manufacturers",
-	"*media.Media":                 "media",
-	"*order.Order":                 "orders",
-	"*shop.Shop":                   "shops",
-	"*translation.Translation":     "translations",
-	"*variant.Variant":             "variants",
+	"*address.Address":           "addresses",
+	"*article.Article":           "articles",
+	"*cache.Cache":               "caches",
+	"*category.Category":         "categories",
+	"*country.Country":           "countries",
+	"*customer.Customer":         "customers",
+	"*manufacturer.Manufacturer": "manufacturers",
+	"*media.Media":               "media",
+	"*order.Order":               "orders",
+	"*shop.Shop":                 "shops",
+	"*translation.Translation":   "translations",
+	"*variant.Variant":           "variants",
+	// TODO: value below gets converted to: articles%3Flimit=999999, 404 Not found response
 	"*[]address.Address":           "addresses?limit=999999",
 	"*[]article.Article":           "articles?limit=999999",
 	"*[]cache.Cache":               "caches?limit=999999",
@@ -157,6 +158,7 @@ func (s swclient) GetRaw(resource string, id string) (*Response, error) {
 // 		},
 // 	}
 // 	s.Put("4", &a)	// single
+// TODO: Problems on execution; article model seems to be partly wrong (shopware: tax expected, got array instead)
 func (s swclient) Put(id string, o interface{}) (*Response, error) {
 	// BUG(philipgatzka): This check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
@@ -238,11 +240,11 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	}
 
 	if resp.StatusCode != 200 {
-		bts, err := ioutil.ReadAll(resp.Request.Body)
+		bts, err := json.MarshalIndent(resp.Request.Header, "", "    ")
 		if err != nil {
 			return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 		}
-		ret := fmt.Sprint(resp.Status, resp.Request, string(bts))
+		ret := fmt.Sprintln(resp.Status, " "+string(bts))
 		return nil, cerror{"swclient/swclient.go", "request()", ret}
 	}
 	// read response
