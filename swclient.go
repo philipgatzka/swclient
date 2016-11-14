@@ -20,6 +20,9 @@ type Swclient interface {
 	GetRaw(resource string, id string) (*Response, error)
 	Put(id string, o interface{}) (*Response, error)
 	PutRaw(resource string, id string, body io.Reader) (*Response, error)
+	Post(id string, o interface{}) (*Response, error)
+	PostRaw(resource string, id string, body io.Reader) (*Response, error)
+	Delete(resource string, id string) (*Response, error)
 }
 
 // swclient holds client and server information.
@@ -161,7 +164,7 @@ func (s swclient) Put(id string, o interface{}) (*Response, error) {
 		if err != nil {
 			return nil, cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
-		return s.request("PUT", res, id, bytes.NewReader(bts))
+		return s.PutRaw(res, id, bytes.NewReader(bts))
 	} else {
 		return nil, cerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 	}
@@ -172,6 +175,48 @@ func (s swclient) Put(id string, o interface{}) (*Response, error) {
 //	resp, err := s.PutRaw("articles", "6", bytes.NewBufferString("{Name:"New name"}"))
 func (s swclient) PutRaw(resource string, id string, body io.Reader) (*Response, error) {
 	return s.request("PUT", resource, id, body)
+}
+
+// Post creates a shop resource.
+// Resource selection is done by passing a pointer to a struct of one of the types present in swclient.resources.
+// Example:
+// 	a := article.Article{
+// 		Name: "The name"
+// 		MainDetail: &article.Detail{
+// 			InStock: 78,
+// 			Prices: []article.Price{
+// 				{
+// 					Price: 123.456,
+// 				},
+// 			},
+// 		},
+// 	}
+// 	s.Post("4", &a)	// single
+func (s swclient) Post(id string, o interface{}) (*Response, error) {
+	// BUG(philipgatzka): This check with reflect.TypeOf(o).String() is ~magic~...
+	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
+		bts, err := json.Marshal(o)
+		if err != nil {
+			return nil, cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
+		}
+		return s.PostRaw(res, id, bytes.NewReader(bts))
+	} else {
+		return nil, cerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
+	}
+}
+
+// PostRaw updates a shop resource.
+// Example:
+//	resp, err := s.PostRaw("articles", "6", bytes.NewBufferString("{Name:"The name"}"))
+func (s swclient) PostRaw(resource string, id string, body io.Reader) (*Response, error) {
+	return s.request("POST", resource, id, body)
+}
+
+// Delete deletes a shop resource.
+// Example:
+//	resp, err := s.Delete("articles", "6")
+func (s swclient) Delete(resource string, id string) (*Response, error) {
+	return s.request("DELETE", resource, id, bytes.NewBufferString(""))
 }
 
 // request executes an http-request.
