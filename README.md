@@ -1,4 +1,4 @@
-# This is a work in progress, use at your own risk.
+*This is a work in progress*
 
 ## Example
 
