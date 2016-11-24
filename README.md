@@ -1,4 +1,6 @@
-# Example
+# This is a work in progress, use at your own risk.
+
+## Example
 
 ```go
 package main
