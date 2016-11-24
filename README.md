@@ -10,12 +10,12 @@ import (
 )
 
 func main() {
-	// Get new swclient
+	// New swclient
 	s, err := swclient.New("user", "key", "https://shop.ware/api")
 	if err != nil {
 		// handle
 	}
-	// The type of this struct determines the api resource which will be called
+	// The type of this struct determines the api endpoint we'll be requesting
 	artcl := article.Article{}
 	// "2" is the id of the article we want to get, all returned data will be unmarshaled into artcl
 	err = s.Get("2", &artcl)
