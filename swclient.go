@@ -218,14 +218,18 @@ func (s swclient) PostRaw(resource string, body io.Reader) (*Response, error) {
 // Example:
 //	resp, err := s.Delete("articles", "6")
 func (s swclient) Delete(resource string, id ...string) (*Response, error) {
-	if len(id) > 1 {
-		bts, err := json.Marshal(id)
-		if err != nil {
-			return nil, cerror{"swylient/swclient.go", "Delete()", err.Error()}
+	if len(id) > 0 {
+		if len(id) > 1 {
+			bts, err := json.Marshal(id)
+			if err != nil {
+				return nil, cerror{"swylient/swclient.go", "Delete()", err.Error()}
+			}
+			return s.request("DELETE", resource, "", bytes.NewReader(bts))
+		} else {
+			return s.request("DELETE", resource, id[0], bytes.NewBufferString(""))
 		}
-		return s.request("DELETE", resource, "", bytes.NewReader(bts))
 	}
-	return s.request("DELETE", resource, id[0], bytes.NewBufferString(""))
+	return nil, cerror{"swclient/swclient.go", "Delete()", "No id given!"}
 }
 
 // request executes an http-request.
