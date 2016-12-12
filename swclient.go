@@ -47,32 +47,31 @@ func (s cerror) Error() string {
 }
 
 // resources maps typenames to Shopware API-resources/endpoints.
-// TODO: get rid of hardcoded limit
+// TODO: find solution for limit
 var resources = map[string]string{
-	"*address.Address":           "addresses",
-	"*article.Article":           "articles",
-	"*cache.Cache":               "caches",
-	"*category.Category":         "categories",
-	"*country.Country":           "countries",
-	"*customer.Customer":         "customers",
-	"*manufacturer.Manufacturer": "manufacturers",
-	"*media.Media":               "media",
-	"*order.Order":               "orders",
-	"*shop.Shop":                 "shops",
-	"*translation.Translation":   "translations",
-	"*variant.Variant":           "variants",
-	// TODO: value below gets converted to: articles%3Flimit=999999, 404 Not found response
-	"*[]address.Address":           "addresses?limit=999999",
-	"*[]article.Article":           "articles?limit=999999",
-	"*[]cache.Cache":               "caches?limit=999999",
-	"*[]category.Category":         "categories?limit=999999",
-	"*[]country.Country":           "countries?limit=999999",
-	"*[]customer.Customer":         "customers?limit=999999",
-	"*[]manufacturer.Manufacturer": "manufacturers?limit=999999",
-	"*[]media.Media":               "media?limit=999999",
-	"*[]order.Order":               "orders?limit=999999",
-	"*[]shop.Shop":                 "shops?limit=999999",
-	"*[]translation.Translation":   "translations?limit=999999",
+	"*address.Address":             "addresses",
+	"*article.Article":             "articles",
+	"*cache.Cache":                 "caches",
+	"*category.Category":           "categories",
+	"*country.Country":             "countries",
+	"*customer.Customer":           "customers",
+	"*manufacturer.Manufacturer":   "manufacturers",
+	"*media.Media":                 "media",
+	"*order.Order":                 "orders",
+	"*shop.Shop":                   "shops",
+	"*translation.Translation":     "translations",
+	"*variant.Variant":             "variants",
+	"*[]address.Address":           "addresses",
+	"*[]article.Article":           "articles",
+	"*[]cache.Cache":               "caches",
+	"*[]category.Category":         "categories",
+	"*[]country.Country":           "countries",
+	"*[]customer.Customer":         "customers",
+	"*[]manufacturer.Manufacturer": "manufacturers",
+	"*[]media.Media":               "media",
+	"*[]order.Order":               "orders",
+	"*[]shop.Shop":                 "shops",
+	"*[]translation.Translation":   "translations",
 }
 
 // New returns an initialised swclient.
