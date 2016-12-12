@@ -1,15 +1,15 @@
 package article
 
 type Price struct {
-	Customergroupkey string         `json:",omitempty"`
-	Customergroup    *CustomerGroup `json:",omitempty"`
-	Articledetailsid int            `json:",omitempty"`
-	Articleid        int            `json:",omitempty"`
-	Id               int            `json:",omitempty"`
-	From             int            `json:",omitempty"`
-	To               string         `json:",omitempty"`
-	Price            float64        `json:",omitempty"`
-	Pseudoprice      float64        `json:",omitempty"`
-	Baseprice        float64        `json:",omitempty"`
-	Percent          float64        `json:",omitempty"`
+	Customergroupkey string         `json:"customerGroupKey,omitempty"`
+	Customergroup    *CustomerGroup `json:"customerGroup,omitempty"`
+	Articledetailsid int            `json:"articleDetailsId,omitempty"`
+	Articleid        int            `json:"articleId,omitempty"`
+	Id               int            `json:"id,omitempty"`
+	From             int            `json:"from,omitempty"`
+	To               string         `json:"to,omitempty"`
+	Price            float64        `json:"price,omitempty"`
+	Pseudoprice      float64        `json:"pseudoPrice,omitempty"`
+	Baseprice        float64        `json:"basePrice,omitempty"`
+	Percent          float64        `json:"percent,omitempty"`
 }

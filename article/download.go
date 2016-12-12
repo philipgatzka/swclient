@@ -1,9 +1,9 @@
 package article
 
 type Download struct {
-	Id        int    `json:",omitempty"`
-	ArticleId int    `json:",omitempty"`
-	Name      string `json:",omitempty"`
-	File      string `json:",omitempty"`
-	Size      int    `json:",omitempty"`
+	Id        int    `json:"id,omitempty"`
+	ArticleId int    `json:"articleId,omitempty"`
+	Name      string `json:"name,omitempty"`
+	File      string `json:"file,omitempty"`
+	Size      int    `json:"size,omitempty"`
 }

@@ -1,9 +1,9 @@
 package article
 
 type Link struct {
-	Id        int    `json:",omitempty"`
-	ArticleId int    `json:",omitempty"`
-	Name      string `json:",omitempty"`
-	Link      string `json:",omitempty"`
-	Target    string `json:",omitempty"`
+	Id        int    `json:"id,omitempty"`
+	ArticleId int    `json:"articleId,omitempty"`
+	Name      string `json:"name,omitempty"`
+	Link      string `json:"link,omitempty"`
+	Target    string `json:"target,omitempty"`
 }

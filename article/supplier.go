@@ -1,12 +1,12 @@
 package article
 
 type Supplier struct {
-	Id              int    `json:",omitempty"`
-	Name            string `json:",omitempty"`
-	Image           string `json:",omitempty"`
-	Link            string `json:",omitempty"`
-	Description     string `json:",omitempty"`
-	MetaTitle       string `json:",omitempty"`
-	MetaDescription string `json:",omitempty"`
-	MetaKeywords    string `json:",omitempty"`
+	Id              int    `json:"id,omitempty"`
+	Name            string `json:"name,omitempty"`
+	Image           string `json:"image,omitempty"`
+	Link            string `json:"link,omitempty"`
+	Description     string `json:"description,omitempty"`
+	MetaTitle       string `json:"metaTitle,omitempty"`
+	MetaDescription string `json:"metaDescription,omitempty"`
+	MetaKeywords    string `json:"metaKeywords,omitempty"`
 }

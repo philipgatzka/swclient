@@ -158,7 +158,6 @@ func (s swclient) GetRaw(resource string, id string) (*Response, error) {
 // 		},
 // 	}
 // 	s.Put("4", &a)	// single
-// TODO: Problems on execution; article model seems to be partly wrong (shopware: tax expected, got array instead)
 func (s swclient) Put(id string, o interface{}) (*Response, error) {
 	// BUG(philipgatzka): This check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {

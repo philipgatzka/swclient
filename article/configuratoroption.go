@@ -1,8 +1,8 @@
 package article
 
 type ConfiguratorOption struct {
-	Id       int    `json:",omitempty"`
-	GroupId  int    `json:",omitempty"`
-	Name     string `json:",omitempty"`
-	Position int    `json:",omitempty"`
+	Id       int    `json:"id,omitempty"`
+	GroupId  int    `json:"groupId,omitempty"`
+	Name     string `json:"name,omitempty"`
+	Position int    `json:"position,omitempty"`
 }
