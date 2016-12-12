@@ -41,4 +41,5 @@ type Article struct {
 	Related           *[]Related          `json:"related,omitempty"`
 	Details           *[]Detail           `json:"details,omitempty"`
 	Translations      map[int]Translation `json:"translations,omitempty"`
+	MainNumber        string              `json:"mainNumber,omitempty"`
 }

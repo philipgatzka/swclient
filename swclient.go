@@ -242,7 +242,7 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 
-	if resp.StatusCode != http.StatusOK || resp.StatusCode != http.StatusCreated {
+	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
 		return nil, cerror{"swclient/swclient.go", "request()", resp.Status}
 	}
 	// read response
