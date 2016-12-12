@@ -242,13 +242,8 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 
-	if resp.StatusCode != 200 {
-		bts, err := json.MarshalIndent(resp.Request.Header, "", "    ")
-		if err != nil {
-			return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
-		}
-		ret := fmt.Sprintln(resp.Status, " "+string(bts))
-		return nil, cerror{"swclient/swclient.go", "request()", ret}
+	if resp.StatusCode != http.StatusOK || resp.StatusCode != http.StatusCreated {
+		return nil, cerror{"swclient/swclient.go", "request()", resp.Status}
 	}
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
