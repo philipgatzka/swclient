@@ -39,9 +39,9 @@ type Article struct {
 	Links             []Link              `json:"links,omitempty"`
 	Downloads         []Download          `json:"downloads,omitempty"`
 	Categories        []Category          `json:"categories,omitempty"`
-	Similar           *[]Similar          `json:"similar,omitempty"`
-	Related           *[]Related          `json:"related,omitempty"`
-	Details           *[]Detail           `json:"details,omitempty"`
+	Similar           []Similar           `json:"similar,omitempty"`
+	Related           []Related           `json:"related,omitempty"`
+	Details           []Detail            `json:"details,omitempty"`
 	Translations      map[int]Translation `json:"translations,omitempty"`
 	MainNumber        string              `json:"mainNumber,omitempty"`
 }
