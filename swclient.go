@@ -2,10 +2,8 @@ package swclient
 
 import (
 	"bytes"
-	"crypto/md5"
 	"encoding/json"
 	"fmt"
-	"hash"
 	"io"
 	"io/ioutil"
 	"net/http"
@@ -13,6 +11,13 @@ import (
 	"path"
 	"reflect"
 )
+
+// Response represents a response from the Shopware API.
+type Response struct {
+	Data    json.RawMessage
+	Success bool
+	Total   int
+}
 
 // Swclient defines the interface this library exposes.
 type Swclient interface {
@@ -32,7 +37,6 @@ type swclient struct {
 	baseurl *url.URL
 	apiurl  string
 	dgc     *digestclient
-	hshr    hash.Hash
 }
 
 // cerror provides custom error messages.
@@ -104,7 +108,6 @@ func New(user string, key string, apiurl string) (Swclient, error) {
 			dgst:  &digest{},
 			httpc: &http.Client{},
 		},
-		hshr: md5.New(),
 	}, nil
 }
 
@@ -165,9 +168,8 @@ func (s swclient) Put(id string, o interface{}) (*Response, error) {
 			return nil, cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
 		return s.PutRaw(res, id, bytes.NewReader(bts))
-	} else {
-		return nil, cerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 	}
+	return nil, cerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 }
 
 // PutRaw updates a shop resource.
@@ -200,9 +202,8 @@ func (s swclient) Post(o interface{}) (*Response, error) {
 			return nil, cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
 		}
 		return s.PostRaw(res, bytes.NewReader(bts))
-	} else {
-		return nil, cerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 	}
+	return nil, cerror{"swclient/swclient.go", "PutSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 }
 
 // PostRaw updates a shop resource.
@@ -223,9 +224,8 @@ func (s swclient) Delete(resource string, id ...string) (*Response, error) {
 				return nil, cerror{"swylient/swclient.go", "Delete()", err.Error()}
 			}
 			return s.request("DELETE", resource, "", bytes.NewReader(bts))
-		} else {
-			return s.request("DELETE", resource, id[0], bytes.NewBufferString(""))
 		}
+		return s.request("DELETE", resource, id[0], bytes.NewBufferString(""))
 	}
 	return nil, cerror{"swclient/swclient.go", "Delete()", "No id given!"}
 }
@@ -236,7 +236,7 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	s.baseurl.Path = path.Join(s.apiurl, resource, id)
 
 	// execute
-	resp, err := s.dgc.request(method, s.baseurl.String(), body, s.user, s.key, s.hshr)
+	resp, err := s.dgc.request(method, s.baseurl.String(), body, s.user, s.key)
 	if err != nil {
 		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
@@ -257,6 +257,5 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	if err != nil {
 		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
-
 	return &data, nil
 }

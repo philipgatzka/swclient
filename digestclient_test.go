@@ -2,7 +2,6 @@ package swclient
 
 import (
 	"bytes"
-	"crypto/md5"
 	"errors"
 	"io"
 	"io/ioutil"
@@ -27,15 +26,14 @@ func TestRequest(t *testing.T) {
 		dgst:  &digest{},
 		httpc: &http.Client{},
 	}
-	hshr := md5.New()
 
 	// Execute two requests
-	_, err = dgst.request("GET", ts.URL, bytes.NewBufferString(""), "user", "key", hshr)
+	_, err = dgst.request("GET", ts.URL, bytes.NewBufferString(""), "user", "key")
 	if err != nil {
 		t.Error(err)
 	}
 
-	resp, err := dgst.request("GET", ts.URL, bytes.NewBufferString(""), "user", "key", hshr)
+	resp, err := dgst.request("GET", ts.URL, bytes.NewBufferString(""), "user", "key")
 	if err != nil {
 		t.Error(err)
 	}

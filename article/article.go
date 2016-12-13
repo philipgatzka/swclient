@@ -29,7 +29,7 @@ type Article struct {
 	MainDetail        *Detail             `json:"mainDetail,omitempty"`
 	Tax               *Tax                `json:"tax,omitempty"`
 	PropertyValue     *PropertyValue      `json:"propertyValue,omitempty"`
-	Supplier          string              `json:"supplier,omitempty"`
+	Supplier          *Supplier           `json:"supplier,omitempty"`
 	PropertyGroup     *PropertyGroup      `json:"propertyGroup,omitempty"`
 	CustomerGroups    []CustomerGroup     `json:"customerGroups,omitempty"`
 	Images            []Image             `json:"images,omitempty"`

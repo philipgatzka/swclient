@@ -2,27 +2,10 @@ package swclient
 
 import (
 	"bytes"
-	"crypto/md5"
 	"fmt"
 	"net/http"
 	"testing"
 )
-
-// mockHasher is a struct for testing the hashing functions.
-type mockHasher struct{}
-
-// Reset is required by hasher interface.
-func (mockHasher) Reset() {}
-
-// Write is required by hasher interface.
-func (mockHasher) Write(b []byte) (int, error) {
-	return 0, nil
-}
-
-// Sum is required by hasher interface.
-func (mockHasher) Sum(b []byte) []byte {
-	return []byte("hello, this is mockHasher!")
-}
 
 var mockDigest = digest{
 	realm:     "test",
@@ -43,22 +26,22 @@ var mockDigest = digest{
 var mockUsername = "test"
 var mockRealm = "test"
 var mockNonce = "test"
-var mockUri = "test"
-var mockCnonce = "68656c6c6f2c2074686973206973206d6f636b48617368657221"
+var mockURI = "test"
+var mockCnonce = "28a6c9636e6c681da5d22252887a2298"
 var mockNc = "00000002"
-var mockResponse = "68656c6c6f2c2074686973206973206d6f636b48617368657221"
+var mockResponse = "28a6c9636e6c681da5d22252887a2298"
 
 var mockData = map[string]string{
 	"username": mockUsername,
 	"realm":    mockRealm,
 	"nonce":    mockNonce,
-	"uri":      mockUri,
+	"uri":      mockURI,
 	"cnonce":   mockCnonce,
 	"nc":       mockNc,
 	"response": mockResponse,
 }
 
-var mockResponseHeader = fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", cnonce="%s", nc=%s, qop=, response="%s"`, mockUsername, mockRealm, mockNonce, mockUri, mockCnonce, mockNc, mockResponse)
+var mockResponseHeader = fmt.Sprintf(`Digest username="%s", realm="%s", nonce="%s", uri="%s", cnonce="%s", nc=%s, qop=, response="%s"`, mockUsername, mockRealm, mockNonce, mockURI, mockCnonce, mockNc, mockResponse)
 
 var mockServerResponse = &http.Response{
 	Header: map[string][]string{
@@ -81,7 +64,7 @@ func TestDigestGenerateRequest(t *testing.T) {
 	expected.Header.Set("Content-Type", "application/json; charset=utf-8")
 
 	// see what is returned
-	got, err := d.generateRequest(d.method, d.path, bytes.NewBufferString("test"), d.name, d.key, mockServerResponse, mockHasher{})
+	got, err := d.generateRequest(d.method, d.path, bytes.NewBufferString("test"), d.name, d.key, mockServerResponse)
 	if err != nil {
 		t.Error(err)
 	}
@@ -100,7 +83,7 @@ func TestDigestGenerateRequest(t *testing.T) {
 }
 
 func TestDigestCalculateResponse(t *testing.T) {
-	got, err := mockDigest.calculateResponse("GET", "http://hello.this/is/irrelevant", "someUser", "someKey", mockHasher{})
+	got, err := mockDigest.calculateResponse("GET", "http://hello.this/is/irrelevant", "someUser", "someKey")
 	if err != nil {
 		t.Error(err)
 	}
@@ -127,7 +110,7 @@ func TestDigestParseParameters(t *testing.T) {
 func TestDigestHashWithColon(t *testing.T) {
 	expected := "c1832f88c38ea538adc290536b3f7fcf"
 
-	got, err := hashWithColon(md5.New(), "hello", "this", "is", "test")
+	got, err := hashWithColon("hello", "this", "is", "test")
 	if err != nil {
 		t.Error(err)
 	}

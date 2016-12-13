@@ -12,7 +12,7 @@ type digestclient struct {
 }
 
 // request executes an http-request.
-func (d *digestclient) request(method string, uri string, body io.Reader, username string, key string, hshr hasher) (*http.Response, error) {
+func (d *digestclient) request(method string, uri string, body io.Reader, username string, key string) (*http.Response, error) {
 	// if we need to (re-)authenticate
 	if d.serverinfo == nil || d.serverinfo.StatusCode != 200 {
 		// probe server
@@ -21,19 +21,18 @@ func (d *digestclient) request(method string, uri string, body io.Reader, userna
 			return nil, cerror{"swclient/digestclient.go", "request()", err.Error()}
 		}
 		// generate new request
-		req, err := d.dgst.generateRequest(method, uri, body, username, key, serverinfo, hshr)
-		if err != nil {
-			return nil, cerror{"swclient/digestclient.go", "request()", err.Error()}
-		}
-		return d.exec(req)
-	} else {
-		// generate new request
-		req, err := d.dgst.generateRequest(method, uri, body, username, key, nil, hshr)
+		req, err := d.dgst.generateRequest(method, uri, body, username, key, serverinfo)
 		if err != nil {
 			return nil, cerror{"swclient/digestclient.go", "request()", err.Error()}
 		}
 		return d.exec(req)
 	}
+	// generate new request
+	req, err := d.dgst.generateRequest(method, uri, body, username, key, nil)
+	if err != nil {
+		return nil, cerror{"swclient/digestclient.go", "request()", err.Error()}
+	}
+	return d.exec(req)
 }
 
 // exec takes an *http.Request and executes it.

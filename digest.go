@@ -1,6 +1,7 @@
 package swclient
 
 import (
+	"crypto/md5"
 	"fmt"
 	"io"
 	"math/rand"
@@ -27,7 +28,7 @@ type digest struct {
 }
 
 // generateRequest generates a new http.Request which carries all necessary authentication information.
-func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response, hshr hasher) (*http.Request, error) {
+func (d *digest) generateRequest(method string, uri string, body io.Reader, username string, key string, serverinfo *http.Response) (*http.Request, error) {
 	// if serverinfo is given
 	if serverinfo != nil {
 		// parse server info
@@ -42,7 +43,7 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 		d.qop = auth["qop"]
 	}
 	// calculate response to server challenge
-	response, err := d.calculateResponse(method, uri, username, key, hshr)
+	response, err := d.calculateResponse(method, uri, username, key)
 	if err != nil {
 		return nil, cerror{"swclient/digest.go", "generateRequest()", err.Error()}
 	}
@@ -68,11 +69,11 @@ func (d *digest) generateRequest(method string, uri string, body io.Reader, user
 }
 
 // calculateResponse calculates the response string the server expects.
-func (d *digest) calculateResponse(method string, uri string, username string, key string, hshr hasher) (string, error) {
+func (d *digest) calculateResponse(method string, uri string, username string, key string) (string, error) {
 	// increment request count
 	d.nC += 0x1
 	// calculate new cNonce
-	cNonce, err := hashRand(hshr)
+	cNonce, err := hashRand()
 	if err != nil {
 		return "", cerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
@@ -85,21 +86,21 @@ func (d *digest) calculateResponse(method string, uri string, username string, k
 	d.name = username
 	d.key = key
 	// calculate aOne
-	aOne, err := hashWithColon(hshr, d.name, d.realm, d.key)
+	aOne, err := hashWithColon(d.name, d.realm, d.key)
 	if err != nil {
 		return "", cerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
 	// set aOne
 	d.aOne = aOne
 	// calculate aOne
-	aTwo, err := hashWithColon(hshr, d.method, d.path)
+	aTwo, err := hashWithColon(d.method, d.path)
 	if err != nil {
 		return "", cerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
 	// set aTwo
 	d.aTwo = aTwo
 	// calculate response
-	response, err := hashWithColon(hshr, d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
+	response, err := hashWithColon(d.aOne, d.nOnce, fmt.Sprintf("%08x", d.nC), d.cNonce, d.qop, d.aTwo)
 	if err != nil {
 		return "", cerror{"swclient/digest.go", "calculateResponse()", err.Error()}
 	}
@@ -144,8 +145,8 @@ func parseParameters(response *http.Response) (map[string]string, error) {
 }
 
 // hashWithColon takes a slice of strings, joins them into a single string separated with colons and hashes that.
-func hashWithColon(hshr hasher, parts ...string) (string, error) {
-	hashed, err := hashString(joinWithColon(parts...), hshr)
+func hashWithColon(parts ...string) (string, error) {
+	hashed, err := hashString(joinWithColon(parts...))
 	if err != nil {
 		return "", cerror{"swclient/digest.go", "hashWithColon()", err.Error()}
 	}
@@ -153,21 +154,13 @@ func hashWithColon(hshr hasher, parts ...string) (string, error) {
 }
 
 // hash returns the hash of the string passed to it.
-func hashString(str string, hshr hasher) (string, error) {
-	// reset hasher because it could have been used before
-	hshr.Reset()
-
-	_, err := hshr.Write([]byte(str))
-	if err != nil {
-		return "", cerror{"swclient/digest.go", "hashString()", err.Error()}
-	}
-	// TODO: (crypto/md5/example_test): its possible to call Sum([]byte(str)) directly and omit hshr.Write() and hshr.Reset() and all the hasher dependencies...
-	return fmt.Sprintf("%x", hshr.Sum(nil)), nil // %x -> hexadecimal
+func hashString(str string) (string, error) {
+	return fmt.Sprintf("%x", md5.Sum([]byte(str))), nil // %x -> hexadecimal
 }
 
 // hashRand returns a hashed pseudo-random int.
-func hashRand(hshr hasher) (string, error) {
-	return hashString(strconv.Itoa(rand.Int()), hshr)
+func hashRand() (string, error) {
+	return hashString(strconv.Itoa(rand.Int()))
 }
 
 // joinWithColon joins a slice of strings into one string separated with colons.
