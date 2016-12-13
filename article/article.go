@@ -1,5 +1,7 @@
 package article
 
+import "encoding/json"
+
 type Article struct {
 	Id                int                 `json:"id,omitempty"`
 	MainDetailId      int                 `json:"mainDetailId,omitempty"`
@@ -41,5 +43,51 @@ type Article struct {
 	Related           *[]Related          `json:"related,omitempty"`
 	Details           *[]Detail           `json:"details,omitempty"`
 	Translations      map[int]Translation `json:"translations,omitempty"`
-	MainNumber        string              `json:"mainNumber,omitempty"`
+}
+
+// MarshalJSON translates an article into JSON.
+// This is necessary, because the Shopware API returns a slightly different object on GETting than it expects on POSTing.
+func (a Article) MarshalJSON() ([]byte, error) {
+	temp := map[string]interface{}{}
+	temp["id"] = a.Id
+	temp["mainDetailId"] = a.MainDetailId
+	temp["supplierId"] = a.SupplierId
+	temp["taxId"] = a.TaxId
+	temp["priceGroupId"] = a.PriceGroupId
+	temp["filterGroupId"] = a.FilterGroupId
+	temp["configuratorSetId"] = a.ConfiguratorSetId
+	temp["name"] = a.Name
+	temp["description"] = a.Description
+	temp["descriptionLong"] = a.DescriptionLong
+	temp["added"] = a.Added
+	temp["active"] = a.Active
+	temp["pseudoSales"] = a.PseudoSales
+	temp["highlight"] = a.Highlight
+	temp["keywords"] = a.Keywords
+	temp["metaTitle"] = a.MetaTitle
+	temp["changed"] = a.Changed
+	temp["priceGroupActive"] = a.PriceGroupActive
+	temp["lastStock"] = a.LastStock
+	temp["crossBundleLook"] = a.CrossBundleLook
+	temp["notification"] = a.Notification
+	temp["template"] = a.Template
+	temp["mode"] = a.Mode
+	temp["availableFrom"] = a.AvailableFrom
+	temp["availableTo"] = a.AvailableTo
+	temp["mainDetail"] = a.MainDetail
+	temp["tax"] = a.Tax.Tax
+	temp["propertyValue"] = a.PropertyValue
+	temp["supplier"] = a.Supplier.Name
+	temp["propertyGroup"] = a.PropertyGroup
+	temp["customerGroups"] = a.CustomerGroups
+	temp["images"] = a.Images
+	temp["configuratorSet"] = a.ConfiguratorSet
+	temp["links"] = a.Links
+	temp["downloads"] = a.Downloads
+	temp["categories"] = a.Categories
+	temp["similar"] = a.Similar
+	temp["related"] = a.Related
+	temp["variants"] = a.Details
+	temp["translations"] = a.Translations
+	return json.Marshal(temp)
 }
