@@ -75,7 +75,7 @@ func (a Article) MarshalJSON() ([]byte, error) {
 	temp["availableFrom"] = a.AvailableFrom
 	temp["availableTo"] = a.AvailableTo
 	temp["mainDetail"] = a.MainDetail
-	temp["tax"] = a.Tax.Tax
+	temp["tax"] = a.Tax
 	temp["propertyValue"] = a.PropertyValue
 	temp["supplier"] = a.Supplier.Name
 	temp["propertyGroup"] = a.PropertyGroup
