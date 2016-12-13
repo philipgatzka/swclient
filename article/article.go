@@ -43,6 +43,7 @@ type Article struct {
 	Related           *[]Related          `json:"related,omitempty"`
 	Details           *[]Detail           `json:"details,omitempty"`
 	Translations      map[int]Translation `json:"translations,omitempty"`
+	MainNumber        string              `json:"mainNumber,omitempty"`
 }
 
 // MarshalJSON translates an article into JSON.
@@ -89,5 +90,6 @@ func (a Article) MarshalJSON() ([]byte, error) {
 	temp["related"] = a.Related
 	temp["variants"] = a.Details
 	temp["translations"] = a.Translations
+	temp["mainNumber"] = a.MainNumber
 	return json.Marshal(temp)
 }
