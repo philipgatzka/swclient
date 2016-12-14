@@ -161,7 +161,7 @@ func (s swclient) GetRaw(resource string, id string) (*Response, error) {
 // 	}
 // 	s.Put("4", &a)	// single
 func (s swclient) Put(id string, o interface{}) (*Response, error) {
-	// BUG(philipgatzka): This check with reflect.TypeOf(o).String() is ~magic~...
+	// BUG: This check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
@@ -195,7 +195,7 @@ func (s swclient) PutRaw(resource string, id string, body io.Reader) (*Response,
 // 	}
 // 	s.Post("4", &a)	// single
 func (s swclient) Post(o interface{}) (*Response, error) {
-	// BUG(philipgatzka): This check with reflect.TypeOf(o).String() is ~magic~...
+	// BUG: This check with reflect.TypeOf(o).String() is ~magic~...
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		bts, err := json.Marshal(o)
 		if err != nil {
