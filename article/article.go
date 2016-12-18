@@ -88,7 +88,7 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		Categories        []Category          `json:"categories,omitempty"`
 		Similar           []Similar           `json:"similar,omitempty"`
 		Related           []Related           `json:"related,omitempty"`
-		Variants          []Detail            `json:"details,omitempty"`
+		Variants          []Detail            `json:"variants,omitempty"`
 		Translations      map[int]Translation `json:"translations,omitempty"`
 		MainNumber        string              `json:"mainNumber,omitempty"`
 	}{

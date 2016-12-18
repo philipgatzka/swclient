@@ -29,4 +29,5 @@ type Detail struct {
 	ReleaseDate         string               `json:"releaseDate,omitempty"`
 	Active              bool                 `json:"active,omitempty"`
 	ShippingFree        bool                 `json:"shippingFree,omitempty"`
+	PurchasePrice       float64              `json:"purchasePrice,omitempty"`
 }
