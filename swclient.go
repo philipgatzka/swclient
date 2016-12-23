@@ -15,6 +15,7 @@ import (
 // Response represents a response from the Shopware API.
 type Response struct {
 	Data    json.RawMessage
+	Message string
 	Success bool
 	Total   int
 }
@@ -240,10 +241,6 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	if err != nil {
 		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
-
-	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
-		return nil, cerror{"swclient/swclient.go", "request()", resp.Status}
-	}
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
@@ -256,6 +253,9 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	err = json.Unmarshal(b, &data)
 	if err != nil {
 		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
+	}
+	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
+		return &data, cerror{"swclient/swclient.go", "request()", resp.Status}
 	}
 	return &data, nil
 }
