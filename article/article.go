@@ -90,7 +90,6 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		Related           []Related           `json:"related,omitempty"`
 		Variants          []Detail            `json:"variants,omitempty"`
 		Translations      map[int]Translation `json:"translations,omitempty"`
-		MainNumber        string              `json:"mainNumber,omitempty"`
 	}{
 		Id:                a.Id,
 		MainDetailId:      a.MainDetailId,
@@ -132,6 +131,5 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		Related:           a.Related,
 		Variants:          a.Details,
 		Translations:      a.Translations,
-		MainNumber:        a.MainNumber,
 	})
 }
