@@ -32,6 +32,7 @@ func (d *digestclient) request(method string, uri string, body io.Reader, userna
 	if err != nil {
 		return nil, cerror{"swclient/digestclient.go", "request()", err.Error()}
 	}
+	req.Close = true
 	return d.exec(req)
 }
 

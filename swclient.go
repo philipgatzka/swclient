@@ -241,21 +241,21 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	if err != nil {
 		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
+	// check if response status is OK
+	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
+		return nil, cerror{"swclient/swclient.go", "request()", resp.Status}
+	}
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
 	}
 	resp.Body.Close()
-
 	// unmarshal received data into swclient.Response
 	data := Response{}
 	err = json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
-	}
-	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
-		return &data, cerror{"swclient/swclient.go", "request()", resp.Status}
+		return nil, cerror{"swclient/swclient.go", "request()", fmt.Sprintln(err.Error(), resp)}
 	}
 	return &data, nil
 }
