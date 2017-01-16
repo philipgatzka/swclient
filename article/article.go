@@ -46,6 +46,20 @@ type Article struct {
 	MainNumber        string              `json:"mainNumber,omitempty"`
 }
 
+type Articles []Article
+
+func (a Articles) Len() int {
+	return len(a)
+}
+
+func (a Articles) Less(i, j int) bool {
+	return a[i].MainDetail.Number < a[j].MainDetail.Number
+}
+
+func (a Articles) Swap(i, j int) {
+	a[i], a[j] = a[j], a[i]
+}
+
 // MarshalJSON translates an article into JSON.
 // This is necessary, because the Shopware API returns a slightly different object on GETting than it expects on POSTing.
 func (a Article) MarshalJSON() ([]byte, error) {
