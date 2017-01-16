@@ -220,7 +220,13 @@ func (s swclient) PostRaw(resource string, body io.Reader) (*Response, error) {
 func (s swclient) Delete(resource string, id ...string) (*Response, error) {
 	if len(id) > 0 {
 		if len(id) > 1 {
-			bts, err := json.Marshal(id)
+			ids := []interface{}{}
+			for _, i := range id {
+				ids = append(ids, struct {
+					Id string `json:"id"`
+				}{Id: i})
+			}
+			bts, err := json.Marshal(ids)
 			if err != nil {
 				return nil, cerror{"swylient/swclient.go", "Delete()", err.Error()}
 			}
