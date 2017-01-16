@@ -48,16 +48,24 @@ type Article struct {
 
 type Articles []Article
 
+// Len implements the sort.Interface
 func (a Articles) Len() int {
 	return len(a)
 }
 
+// Less implements the sort.Interface
 func (a Articles) Less(i, j int) bool {
 	return a[i].MainDetail.Number < a[j].MainDetail.Number
 }
 
+// Swap implements the sort.Interface
 func (a Articles) Swap(i, j int) {
 	a[i], a[j] = a[j], a[i]
+}
+
+// String implements the Stringer interface. Returns the articles Number and Name
+func (a Article) String() string {
+	return a.MainDetail.Number + ": " + a.Name
 }
 
 // MarshalJSON translates an article into JSON.
