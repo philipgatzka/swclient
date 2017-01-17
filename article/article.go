@@ -46,6 +46,30 @@ type Article struct {
 	MainNumber        string              `json:"mainNumber,omitempty"`
 }
 
+func New(name, supplier, number, customerGroupKey string, taxID, category int, price float64, active bool) (Article, error) {
+	return Article{
+		Active:   active,
+		TaxId:    taxID,
+		Name:     name,
+		Supplier: supplier,
+		MainDetail: &Detail{
+			Active: active,
+			Number: number,
+			Prices: []Price{
+				{
+					Price:            price,
+					Customergroupkey: customerGroupKey,
+				},
+			},
+		},
+		Categories: []Category{
+			{
+				Id: category,
+			},
+		},
+	}, nil
+}
+
 type Articles []Article
 
 // Len implements the sort.Interface

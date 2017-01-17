@@ -5,34 +5,72 @@ import (
 )
 
 type Customer struct {
-	ID              int         `json:"id,omitempty"`
-	PaymentID       int         `json:"paymentId,omitempty"`
-	GroupKey        string      `json:"groupKey,omitempty"`
-	ShopID          string      `json:"shopId,omitempty"`
-	PriceGroupID    int         `json:"priceGroupId,omitempty"`
-	EncoderName     string      `json:"encoderName,omitempty"`
-	HashPassword    string      `json:"hashPassword,omitempty"`
-	Active          bool        `json:"active,omitempty"`
-	Email           string      `json:"email,omitempty"`
-	FirstLogin      string      `json:"firstLogin,omitempty"`
-	LastLogin       string      `json:"lastLogin,omitempty"`
-	AccountMode     int         `json:"accountMode,omitempty"`
-	ConfirmationKey string      `json:"confirmationKey,omitempty"`
-	SessionID       string      `json:"sessionId,omitempty"`
-	Newsletter      bool        `json:"newsletter,omitempty"`
-	Validation      string      `json:"validation,omitempty"`
-	Affiliate       bool        `json:"affiliate,omitempty"`
-	PaymentPreset   int         `json:"paymentPreset,omitempty"`
-	LanguageID      int         `json:"languageId,omitempty"`
-	Referer         string      `json:"referer,omitempty"`
-	InternalComment string      `json:"internalComment,omitempty"`
-	FailedLogins    int         `json:"failedLogins,omitempty"`
-	LockedUntil     string      `json:"lockedUntil,omitempty"`
-	Attribute       Attribute   `json:"attribute,omitempty"`
-	Billing         Billing     `json:"billing,omitempty"`
-	PaymentData     PaymentData `json:"paymentData,omitempty"`
-	Shipping        Shipping    `json:"shipping,omitempty"`
-	Debit           Debit       `json:"debit,omitempty"`
+	ID              int          `json:"id,omitempty"`
+	PaymentID       int          `json:"paymentId,omitempty"`
+	GroupKey        string       `json:"groupKey,omitempty"`
+	ShopID          string       `json:"shopId,omitempty"`
+	PriceGroupID    int          `json:"priceGroupId,omitempty"`
+	EncoderName     string       `json:"encoderName,omitempty"`
+	HashPassword    string       `json:"hashPassword,omitempty"`
+	Active          bool         `json:"active,omitempty"`
+	Email           string       `json:"email,omitempty"`
+	FirstLogin      string       `json:"firstLogin,omitempty"`
+	LastLogin       string       `json:"lastLogin,omitempty"`
+	AccountMode     int          `json:"accountMode,omitempty"`
+	ConfirmationKey string       `json:"confirmationKey,omitempty"`
+	SessionID       string       `json:"sessionId,omitempty"`
+	Newsletter      bool         `json:"newsletter,omitempty"`
+	Validation      string       `json:"validation,omitempty"`
+	Affiliate       bool         `json:"affiliate,omitempty"`
+	PaymentPreset   int          `json:"paymentPreset,omitempty"`
+	LanguageID      int          `json:"languageId,omitempty"`
+	Referer         string       `json:"referer,omitempty"`
+	InternalComment string       `json:"internalComment,omitempty"`
+	FailedLogins    int          `json:"failedLogins,omitempty"`
+	LockedUntil     string       `json:"lockedUntil,omitempty"`
+	Attribute       *Attribute   `json:"attribute,omitempty"`
+	Billing         *Billing     `json:"billing,omitempty"`
+	PaymentData     *PaymentData `json:"paymentData,omitempty"`
+	Shipping        *Shipping    `json:"shipping,omitempty"`
+	Debit           *Debit       `json:"debit,omitempty"`
+}
+
+func New(email, firstname, lastname, salutation, street, streetNumber, city, zipcode string, countryID int) (Customer, error) {
+	return Customer{
+		Email: email,
+		Billing: &Billing{
+			FirstName:    firstname,
+			LastName:     lastname,
+			Salutation:   salutation,
+			Street:       street,
+			StreetNumber: streetNumber,
+			City:         city,
+			ZipCode:      zipcode,
+			CountryID:    countryID,
+		},
+	}, nil
+}
+
+type Customers []Customer
+
+// Len implements the sort.Interface
+func (c Customers) Len() int {
+	return len(c)
+}
+
+// Less implements the sort.Interface
+func (c Customers) Less(i, j int) bool {
+	return c[i].Email < c[j].Email
+}
+
+// Swap implements the sort.Interface
+func (c Customers) Swap(i, j int) {
+	c[i], c[j] = c[j], c[i]
+}
+
+// String implements the Stringer interface. Returns the articles Number and Name
+func (c Customer) String() string {
+	return c.Email
 }
 
 // MarshalJSON translates a customer into JSON.
