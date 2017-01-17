@@ -1,0 +1,106 @@
+package customer
+
+import (
+	"encoding/json"
+)
+
+type Customer struct {
+	ID              int         `json:"id,omitempty"`
+	PaymentID       int         `json:"paymentId,omitempty"`
+	GroupKey        string      `json:"groupKey,omitempty"`
+	ShopID          string      `json:"shopId,omitempty"`
+	PriceGroupID    int         `json:"priceGroupId,omitempty"`
+	EncoderName     string      `json:"encoderName,omitempty"`
+	HashPassword    string      `json:"hashPassword,omitempty"`
+	Active          bool        `json:"active,omitempty"`
+	Email           string      `json:"email,omitempty"`
+	FirstLogin      string      `json:"firstLogin,omitempty"`
+	LastLogin       string      `json:"lastLogin,omitempty"`
+	AccountMode     int         `json:"accountMode,omitempty"`
+	ConfirmationKey string      `json:"confirmationKey,omitempty"`
+	SessionID       string      `json:"sessionId,omitempty"`
+	Newsletter      bool        `json:"newsletter,omitempty"`
+	Validation      string      `json:"validation,omitempty"`
+	Affiliate       bool        `json:"affiliate,omitempty"`
+	PaymentPreset   int         `json:"paymentPreset,omitempty"`
+	LanguageID      int         `json:"languageId,omitempty"`
+	Referer         string      `json:"referer,omitempty"`
+	InternalComment string      `json:"internalComment,omitempty"`
+	FailedLogins    int         `json:"failedLogins,omitempty"`
+	LockedUntil     string      `json:"lockedUntil,omitempty"`
+	Attribute       Attribute   `json:"attribute,omitempty"`
+	Billing         Billing     `json:"billing,omitempty"`
+	PaymentData     PaymentData `json:"paymentData,omitempty"`
+	Shipping        Shipping    `json:"shipping,omitempty"`
+	Debit           Debit       `json:"debit,omitempty"`
+}
+
+// MarshalJSON translates a customer into JSON.
+// This is necessary, because the Shopware API returns a slightly different object on GETting than it expects on POSTing.
+func (c Customer) MarshalJSON() ([]byte, error) {
+	return json.Marshal(struct {
+		ID              int         `json:"id,omitempty"`
+		FirstName       string      `json:"firstname,omitempty"`
+		LastName        string      `json:"lastname,omitempty"`
+		Salutation      string      `json:"salutation"`
+		PaymentID       int         `json:"paymentId,omitempty"`
+		GroupKey        string      `json:"groupKey,omitempty"`
+		ShopID          string      `json:"shopId,omitempty"`
+		PriceGroupID    int         `json:"priceGroupId,omitempty"`
+		EncoderName     string      `json:"encoderName,omitempty"`
+		HashPassword    string      `json:"hashPassword,omitempty"`
+		Active          bool        `json:"active,omitempty"`
+		Email           string      `json:"email,omitempty"`
+		FirstLogin      string      `json:"firstLogin,omitempty"`
+		LastLogin       string      `json:"lastLogin,omitempty"`
+		AccountMode     int         `json:"accountMode,omitempty"`
+		ConfirmationKey string      `json:"confirmationKey,omitempty"`
+		SessionID       string      `json:"sessionId,omitempty"`
+		Newsletter      bool        `json:"newsletter,omitempty"`
+		Validation      string      `json:"validation,omitempty"`
+		Affiliate       bool        `json:"affiliate,omitempty"`
+		PaymentPreset   int         `json:"paymentPreset,omitempty"`
+		LanguageID      int         `json:"languageId,omitempty"`
+		Referer         string      `json:"referer,omitempty"`
+		InternalComment string      `json:"internalComment,omitempty"`
+		FailedLogins    int         `json:"failedLogins,omitempty"`
+		LockedUntil     string      `json:"lockedUntil,omitempty"`
+		Attribute       Attribute   `json:"attribute,omitempty"`
+		Billing         Billing     `json:"billing,omitempty"`
+		PaymentData     PaymentData `json:"paymentData,omitempty"`
+		Shipping        Shipping    `json:"shipping,omitempty"`
+		Debit           Debit       `json:"debit,omitempty"`
+	}{
+		ID:              c.ID,
+		FirstName:       c.Billing.FirstName,
+		LastName:        c.Billing.LastName,
+		Salutation:      c.Billing.Salutation,
+		PaymentID:       c.PaymentID,
+		GroupKey:        c.GroupKey,
+		ShopID:          c.ShopID,
+		PriceGroupID:    c.PriceGroupID,
+		EncoderName:     c.EncoderName,
+		HashPassword:    c.HashPassword,
+		Active:          c.Active,
+		Email:           c.Email,
+		FirstLogin:      c.FirstLogin,
+		LastLogin:       c.LastLogin,
+		AccountMode:     c.AccountMode,
+		ConfirmationKey: c.ConfirmationKey,
+		SessionID:       c.SessionID,
+		Newsletter:      c.Newsletter,
+		Validation:      c.Validation,
+		Affiliate:       c.Affiliate,
+		PaymentPreset:   c.PaymentPreset,
+		LanguageID:      c.LanguageID,
+		Referer:         c.Referer,
+		InternalComment: c.InternalComment,
+		FailedLogins:    c.FailedLogins,
+		LockedUntil:     c.LockedUntil,
+		Attribute:       c.Attribute,
+		Billing:         c.Billing,
+		PaymentData:     c.PaymentData,
+		Shipping:        c.Shipping,
+		Debit:           c.Debit,
+	})
+}
