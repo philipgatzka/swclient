@@ -48,10 +48,12 @@ type Article struct {
 
 func New(name, supplier, number, customerGroupKey string, taxID, category int, price float64, active bool) (Article, error) {
 	return Article{
-		Active:   active,
-		TaxId:    taxID,
-		Name:     name,
-		Supplier: supplier,
+		Active: active,
+		TaxId:  taxID,
+		Name:   name,
+		Supplier: &Supplier{
+			Name: supplier,
+		},
 		MainDetail: &Detail{
 			Active: active,
 			Number: number,
