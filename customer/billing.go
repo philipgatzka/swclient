@@ -3,6 +3,7 @@ package customer
 type Billing struct {
 	ID           int               `json:"id"`
 	CustomerID   int               `json:"customerId"`
+	Country      int               `json:"country"`
 	CountryID    int               `json:"countryId"`
 	StateID      int               `json:"stateId"`
 	Company      string            `json:"company"`

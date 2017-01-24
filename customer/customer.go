@@ -46,7 +46,7 @@ func New(email, firstname, lastname, salutation, street, streetNumber, city, zip
 			StreetNumber: streetNumber,
 			City:         city,
 			ZipCode:      zipcode,
-			CountryID:    countryID,
+			Country:      countryID,
 		},
 	}, nil
 }
@@ -70,44 +70,44 @@ func (c Customers) Swap(i, j int) {
 
 // String implements the Stringer interface. Returns the articles Number and Name
 func (c Customer) String() string {
-	return c.Email
+	return c.Email + ": " + c.Billing.FirstName + " " + c.Billing.LastName
 }
 
 // MarshalJSON translates a customer into JSON.
 // This is necessary, because the Shopware API returns a slightly different object on GETting than it expects on POSTing.
 func (c Customer) MarshalJSON() ([]byte, error) {
 	return json.Marshal(struct {
-		ID              int         `json:"id,omitempty"`
-		FirstName       string      `json:"firstname,omitempty"`
-		LastName        string      `json:"lastname,omitempty"`
-		Salutation      string      `json:"salutation"`
-		PaymentID       int         `json:"paymentId,omitempty"`
-		GroupKey        string      `json:"groupKey,omitempty"`
-		ShopID          string      `json:"shopId,omitempty"`
-		PriceGroupID    int         `json:"priceGroupId,omitempty"`
-		EncoderName     string      `json:"encoderName,omitempty"`
-		HashPassword    string      `json:"hashPassword,omitempty"`
-		Active          bool        `json:"active,omitempty"`
-		Email           string      `json:"email,omitempty"`
-		FirstLogin      string      `json:"firstLogin,omitempty"`
-		LastLogin       string      `json:"lastLogin,omitempty"`
-		AccountMode     int         `json:"accountMode,omitempty"`
-		ConfirmationKey string      `json:"confirmationKey,omitempty"`
-		SessionID       string      `json:"sessionId,omitempty"`
-		Newsletter      bool        `json:"newsletter,omitempty"`
-		Validation      string      `json:"validation,omitempty"`
-		Affiliate       bool        `json:"affiliate,omitempty"`
-		PaymentPreset   int         `json:"paymentPreset,omitempty"`
-		LanguageID      int         `json:"languageId,omitempty"`
-		Referer         string      `json:"referer,omitempty"`
-		InternalComment string      `json:"internalComment,omitempty"`
-		FailedLogins    int         `json:"failedLogins,omitempty"`
-		LockedUntil     string      `json:"lockedUntil,omitempty"`
-		Attribute       Attribute   `json:"attribute,omitempty"`
-		Billing         Billing     `json:"billing,omitempty"`
-		PaymentData     PaymentData `json:"paymentData,omitempty"`
-		Shipping        Shipping    `json:"shipping,omitempty"`
-		Debit           Debit       `json:"debit,omitempty"`
+		ID              int          `json:"id,omitempty"`
+		FirstName       string       `json:"firstname,omitempty"`
+		LastName        string       `json:"lastname,omitempty"`
+		Salutation      string       `json:"salutation"`
+		PaymentID       int          `json:"paymentId,omitempty"`
+		GroupKey        string       `json:"groupKey,omitempty"`
+		ShopID          string       `json:"shopId,omitempty"`
+		PriceGroupID    int          `json:"priceGroupId,omitempty"`
+		EncoderName     string       `json:"encoderName,omitempty"`
+		HashPassword    string       `json:"hashPassword,omitempty"`
+		Active          bool         `json:"active,omitempty"`
+		Email           string       `json:"email,omitempty"`
+		FirstLogin      string       `json:"firstLogin,omitempty"`
+		LastLogin       string       `json:"lastLogin,omitempty"`
+		AccountMode     int          `json:"accountMode,omitempty"`
+		ConfirmationKey string       `json:"confirmationKey,omitempty"`
+		SessionID       string       `json:"sessionId,omitempty"`
+		Newsletter      bool         `json:"newsletter,omitempty"`
+		Validation      string       `json:"validation,omitempty"`
+		Affiliate       bool         `json:"affiliate,omitempty"`
+		PaymentPreset   int          `json:"paymentPreset,omitempty"`
+		LanguageID      int          `json:"languageId,omitempty"`
+		Referer         string       `json:"referer,omitempty"`
+		InternalComment string       `json:"internalComment,omitempty"`
+		FailedLogins    int          `json:"failedLogins,omitempty"`
+		LockedUntil     string       `json:"lockedUntil,omitempty"`
+		Attribute       *Attribute   `json:"attribute,omitempty"`
+		Billing         *Billing     `json:"billing,omitempty"`
+		PaymentData     *PaymentData `json:"paymentData,omitempty"`
+		Shipping        *Shipping    `json:"shipping,omitempty"`
+		Debit           *Debit       `json:"debit,omitempty"`
 	}{
 		ID:              c.ID,
 		FirstName:       c.Billing.FirstName,
