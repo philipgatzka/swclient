@@ -12,6 +12,7 @@ type Customer struct {
 	PriceGroupID    int          `json:"priceGroupId,omitempty"`
 	EncoderName     string       `json:"encoderName,omitempty"`
 	HashPassword    string       `json:"hashPassword,omitempty"`
+	RawPassword     string       `json:"rawPassword,omitempty"`
 	Active          bool         `json:"active,omitempty"`
 	Email           string       `json:"email,omitempty"`
 	FirstLogin      string       `json:"firstLogin,omitempty"`
@@ -87,6 +88,7 @@ func (c Customer) MarshalJSON() ([]byte, error) {
 		PriceGroupID    int          `json:"priceGroupId,omitempty"`
 		EncoderName     string       `json:"encoderName,omitempty"`
 		HashPassword    string       `json:"hashPassword,omitempty"`
+		RawPassword     string       `json:"rawPassword,omitempty"`
 		Active          bool         `json:"active,omitempty"`
 		Email           string       `json:"email,omitempty"`
 		FirstLogin      string       `json:"firstLogin,omitempty"`
@@ -119,6 +121,7 @@ func (c Customer) MarshalJSON() ([]byte, error) {
 		PriceGroupID:    c.PriceGroupID,
 		EncoderName:     c.EncoderName,
 		HashPassword:    c.HashPassword,
+		RawPassword:     c.RawPassword,
 		Active:          c.Active,
 		Email:           c.Email,
 		FirstLogin:      c.FirstLogin,
