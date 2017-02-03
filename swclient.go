@@ -78,6 +78,7 @@ var resources = map[string]string{
 	"*[]shop.Shop":                 "shops",
 	"*[]translation.Translation":   "translations",
 	"*article.Articles":            "articles",
+	"*manufacturer.Manufacturers":  "manufacturers",
 }
 
 // New returns an initialised swclient.

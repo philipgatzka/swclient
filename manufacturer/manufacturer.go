@@ -1,6 +1,6 @@
-package supplier
+package manufacturer
 
-type Supplier struct {
+type Manufacturer struct {
 	ID          int    `json:"id,omitempty"`
 	Name        string `json:"name,omitempty"`
 	Image       string `json:"image,omitempty"`
@@ -8,24 +8,24 @@ type Supplier struct {
 	Description string `json:"description,omitempty"`
 }
 
-type Suppliers []Supplier
+type Manufacturers []Manufacturer
 
 // Len implements the sort.Interface
-func (s Suppliers) Len() int {
-	return len(s)
+func (m Manufacturers) Len() int {
+	return len(m)
 }
 
 // Less implements the sort.Interface
-func (s Suppliers) Less(i, j int) bool {
-	return s[i].Name < s[j].Name
+func (m Manufacturers) Less(i, j int) bool {
+	return m[i].Name < m[j].Name
 }
 
 // Swap implements the sort.Interface
-func (s Suppliers) Swap(i, j int) {
-	s[i], s[j] = s[j], s[i]
+func (m Manufacturers) Swap(i, j int) {
+	m[i], m[j] = m[j], m[i]
 }
 
 // String implements the Stringer interface. Returns the articles Number and Name
-func (s Supplier) String() string {
-	return s.Name
+func (m Manufacturer) String() string {
+	return m.Name
 }
