@@ -28,6 +28,7 @@ type Swclient interface {
 	PutRaw(resource string, id string, body io.Reader) (*Response, error)
 	Post(o interface{}) (*Response, error)
 	PostRaw(resource string, body io.Reader) (*Response, error)
+	RequestRaw(method, uri string, body io.Reader) (*http.Response, error)
 	Delete(resource string, id ...string) (*Response, error)
 }
 
@@ -266,4 +267,9 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 		return nil, cerror{"swclient/swclient.go", "request()", fmt.Sprintln(err.Error(), resp)}
 	}
 	return &data, nil
+}
+
+// RequestRaw executes a customizable request via the Swclients Digest-HTTP-Client
+func (s swclient) RequestRaw(method, uri string, body io.Reader) (*http.Response, error) {
+	return s.dgc.request(method, uri, body, s.user, s.key)
 }
