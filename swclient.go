@@ -128,15 +128,15 @@ func (s swclient) Get(id string, o interface{}) error {
 	if res, ok := resources[reflect.TypeOf(o).String()]; ok {
 		resp, err := s.GetRaw(res, id)
 		if err != nil {
-			return cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
+			return cerror{"swclient/swclient.go", "Get() - GetRaw()", err.Error()}
 		}
 
 		err = json.Unmarshal(resp.Data, o)
 		if err != nil {
-			return cerror{"swclient/swclient.go", "GetSingle()", err.Error()}
+			return cerror{"swclient/swclient.go", "Get() - json.Unmarshal()", err.Error()}
 		}
 	} else {
-		return cerror{"swclient/swclient.go", "GetSingle()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
+		return cerror{"swclient/swclient.go", "Get()", reflect.TypeOf(o).String() + " is not a resource of the shopware api!"}
 	}
 	return nil
 }
