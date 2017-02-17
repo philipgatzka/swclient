@@ -97,7 +97,7 @@ func (a Article) String() string {
 // MarshalJSON translates an article into JSON.
 // This is necessary, because the Shopware API returns a slightly different object on GETting than it expects on POSTing.
 func (a Article) MarshalJSON() ([]byte, error) {
-	return json.Marshal(struct {
+	tmp := struct {
 		Id                int                 `json:"id,omitempty"`
 		MainDetailId      int                 `json:"mainDetailId,omitempty"`
 		SupplierId        int                 `json:"supplierId,omitempty"`
@@ -167,7 +167,7 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		MainDetail:        a.MainDetail,
 		Tax:               a.Tax,
 		PropertyValue:     a.PropertyValue,
-		Supplier:          a.Supplier.Name,
+		Supplier:          "",
 		PropertyGroup:     a.PropertyGroup,
 		CustomerGroups:    a.CustomerGroups,
 		Images:            a.Images,
@@ -179,5 +179,11 @@ func (a Article) MarshalJSON() ([]byte, error) {
 		Related:           a.Related,
 		Variants:          a.Details,
 		Translations:      a.Translations,
-	})
+	}
+
+	if a.Supplier != nil {
+		tmp.Supplier = a.Supplier.Name
+	}
+
+	return json.Marshal(tmp)
 }
