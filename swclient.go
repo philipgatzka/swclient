@@ -248,7 +248,7 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	// execute
 	resp, err := s.dgc.request(method, s.baseurl.String(), body, s.user, s.key)
 	if err != nil {
-		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
+		return nil, cerror{"swclient/swclient.go", "request() - s.dgc.request()", err.Error()}
 	}
 	// check if response status is OK
 	// if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
@@ -257,14 +257,14 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
-		return nil, cerror{"swclient/swclient.go", "request()", err.Error()}
+		return nil, cerror{"swclient/swclient.go", "request() - ioutil.ReadAll()", err.Error()}
 	}
 	resp.Body.Close()
 	// unmarshal received data into swclient.Response
 	data := Response{}
 	err = json.Unmarshal(b, &data)
 	if err != nil {
-		return nil, cerror{"swclient/swclient.go", "request()", fmt.Sprintln(err.Error(), resp)}
+		return nil, cerror{"swclient/swclient.go", "request() - json.Unmarshal()", fmt.Sprintln(err.Error(), resp)}
 	}
 	return &data, nil
 }
