@@ -262,10 +262,7 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	resp.Body.Close()
 	// unmarshal received data into swclient.Response
 	data := Response{}
-	err = json.Unmarshal(b, &data)
-	if err != nil {
-		return nil, cerror{"swclient/swclient.go", "request() - json.Unmarshal()", fmt.Sprintln(err.Error(), resp)}
-	}
+	json.Unmarshal(b, &data)
 	return &data, nil
 }
 
