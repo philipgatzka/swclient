@@ -33,4 +33,4 @@ func main() {
 
  - More and better tests
  - Fix Digestclient and put it in a separate package (or import a better one from another project)
- - Implement more API resources (structs)
+ - Implement more API resources
