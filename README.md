@@ -28,3 +28,9 @@ func main() {
 	fmt.Println(artcl.Name, artcl.DescriptionLong, artcl.MainDetail.Attribute.Attr3)
 }
 ```
+
+## TODO
+
+ - More and better tests
+ - Fix Digestclient and put it in a separate package (or import a better one from another project)
+ - Implement more API resources (structs)
