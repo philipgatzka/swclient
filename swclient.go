@@ -53,7 +53,6 @@ func (s cerror) Error() string {
 }
 
 // resources maps typenames to Shopware API-resources/endpoints.
-// TODO: find solution for limit
 var resources = map[string]string{
 	"*address.Address":             "addresses",
 	"*article.Article":             "articles",
@@ -250,16 +249,18 @@ func (s *swclient) request(method string, resource string, id string, body io.Re
 	if err != nil {
 		return nil, cerror{"swclient/swclient.go", "request() - s.dgc.request()", err.Error()}
 	}
-	// check if response status is OK
-	// if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
-	//	  return nil, cerror{"swclient/swclient.go", "request()", resp.Status}
-	// }
 	// read response
 	b, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, cerror{"swclient/swclient.go", "request() - ioutil.ReadAll()", err.Error()}
 	}
 	resp.Body.Close()
+
+	// check if response status is OK
+	if !(resp.StatusCode == http.StatusOK || resp.StatusCode == http.StatusCreated) {
+		return nil, cerror{"swclient/swclient.go", "request()", fmt.Sprintf("%s:\n%s", resp.Status, string(b))}
+	}
+
 	// unmarshal received data into swclient.Response
 	data := Response{}
 	json.Unmarshal(b, &data)

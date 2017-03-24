@@ -46,6 +46,7 @@ type Article struct {
 	MainNumber        string              `json:"mainNumber,omitempty"`
 }
 
+// New creates a new article with all data required by the shopware API
 func New(name, supplier, number, customerGroupKey string, taxID, category int, price float64, active bool) (Article, error) {
 	return Article{
 		Active: active,
